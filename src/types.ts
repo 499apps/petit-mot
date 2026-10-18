@@ -39,6 +39,7 @@ export interface Profile {
   avatar: string; // emoji
   level: 1 | 2 | 3 | 4;
   createdAt: string;
+  updatedAt?: number; // ms; last edit, used to merge edits from other computers
 }
 
 export interface Settings {
@@ -49,6 +50,8 @@ export interface Settings {
   voiceURI: string | null;
   autoSites: string[]; // origins with opt-in auto-sprinkle
   showEmoji: boolean;
+  syncEnabled: boolean; // this computer: sync progress through the user's own Chrome sync
+  updatedAt?: number; // ms; last change to the shared settings (density, hunt, grace, emoji)
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -59,6 +62,7 @@ export const DEFAULT_SETTINGS: Settings = {
   voiceURI: null,
   autoSites: [],
   showEmoji: true,
+  syncEnabled: true,
 };
 
 /** XP earned per profile per local day: { '2026-10-18': { profileId: 25 } } */

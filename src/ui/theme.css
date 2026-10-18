@@ -64,3 +64,5 @@ label.switch input:checked::after { left: 19px; }
   .pop { animation: pop .22s ease; }
   @keyframes pop { from { transform: scale(.97); opacity: .3; } to { transform: none; opacity: 1; } }
 }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+button.linkish { background: none; border: 0; padding: 0; color: var(--m); text-decoration: underline; font-weight: 700; }

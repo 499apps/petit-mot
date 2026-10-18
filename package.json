@@ -2,7 +2,7 @@
   "name": "petit-mot",
   "description": "Learn French together while you browse: gentle word swaps, Word Hunt games and family streaks. 100% on your device.",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.1.3",
   "type": "module",
   "license": "MIT",
   "scripts": {
