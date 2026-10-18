@@ -14,11 +14,15 @@ export default defineBackground(() => {
   });
 
   // Content scripts can't use chrome.tts; they ask here. Text is a word or short phrase from our pack.
-  browser.runtime.onMessage.addListener((msg: { type?: string; text?: unknown }) => {
+  // Answers with sendResponse (and returns true) so the reply always arrives, success or not.
+  browser.runtime.onMessage.addListener((msg: { type?: string; text?: unknown }, _sender, sendResponse) => {
     if (msg?.type !== 'pm:speak' || typeof msg.text !== 'string') return undefined;
     const text = msg.text.slice(0, 200);
     const tts = ttsEngine();
-    return getSettings().then((s) => speakWith(tts ? [tts] : [], text, s.voiceURI));
+    getSettings()
+      .then((s) => speakWith(tts ? [tts] : [], text, s.voiceURI))
+      .then((r) => sendResponse(r), () => sendResponse({ ok: false, reason: 'failed', tried: [] }));
+    return true;
   });
 
   browser.runtime.onStartup.addListener(() => void syncAuto());

@@ -5,7 +5,7 @@ import { priorityFor } from '@/src/srs';
 import { getDeck, getProfiles, getSettings, rate, addXp, addHunt } from '@/src/store';
 import { createHunt, current, endTurn, find, hint, nextPlayer, results, startTurn, timeLeft, winner, type Hunt, type HuntPlayer } from '@/src/hunt';
 import { XP } from '@/src/family';
-import { speakWith, webEngine, friendlyError, type SpeakResult } from '@/src/speech';
+import { speakViaBackground, webEngine, friendlyError, type SpeakResult } from '@/src/speech';
 import { PAGE_CSS } from '@/src/ui/page-style';
 import { OVERLAY_CSS } from '@/src/ui/overlay-style';
 import { h } from '@/src/ui/dom';
@@ -139,14 +139,9 @@ function overlay(): ShadowRoot {
 function clearOverlay(sel: string) { shadow?.querySelectorAll(sel).forEach((n) => n.remove()); }
 
 /** Speak via the background (chrome.tts, works with every Chrome voice); fall back to the page's Web Speech. */
-async function say(text: string, saved: string | null): Promise<SpeakResult> {
-  const bg = (await browser.runtime.sendMessage({ type: 'pm:speak', text }).catch(() => null)) as SpeakResult | null;
-  if (bg?.ok) return bg;
-  const web = webEngine();
-  const local = web ? await speakWith([web], text, saved) : null;
-  if (local?.ok) return local;
-  const none = (!bg || bg.reason === 'no-french-voice') && (!local || local.reason === 'no-french-voice');
-  return { ok: false, reason: none ? 'no-french-voice' : 'failed', tried: [...(bg?.tried ?? []), ...(local?.tried ?? [])] };
+function say(text: string, saved: string | null): Promise<SpeakResult> {
+  const ask = (t: string) => browser.runtime.sendMessage({ type: 'pm:speak', text: t }).then((r) => (r ?? null) as SpeakResult | null, () => null);
+  return speakViaBackground(ask, webEngine(), text, saved);
 }
 
 async function fallbackCard(span: HTMLElement, id: string) {
@@ -178,6 +173,7 @@ async function fallbackCard(span: HTMLElement, id: string) {
       h('button', { class: 'speak', 'aria-label': `Say ${w.fr}`, title: 'Listen', onclick: async () => {
         const r = await say(withArticle(w), settings.voiceURI);
         if (!r.ok) { msg.className = 'msg oops'; msg.textContent = friendlyError(r, true); }
+        else if (!r.superseded && msg.classList.contains('oops')) { msg.className = 'msg'; msg.textContent = ''; }
       }, text: '🔊' }),
       h('button', { class: 'b again', onclick: () => void answer('again'), text: 'Again' }),
       h('button', { class: 'b good', onclick: () => void answer('good'), text: 'Got it!' })),
