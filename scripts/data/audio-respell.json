@@ -1,0 +1,8 @@
+{
+  "_comment": "Spelling hints for the offline voice, where its phonemizer gets a word wrong in isolation (found by comparing its phonemes with the pack's IPA). Key: w:<id> for the word clip, e:<id> for the example. Value: what the voice reads; the learner still sees the real spelling.",
+  "w:dos.n": "le dau.",
+  "w:rythme.n": "le ritme.",
+  "w:est.n": "l'este.",
+  "w:football.n": "le foutbol.",
+  "e:hauteur.n": "La hauteur du Mont Évérest est de 8.848 mètres."
+}
