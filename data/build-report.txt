@@ -34,3 +34,17 @@ core: "smart" not in Wiktionary glosses of intelligent (kept, curated)
 core: "clever" not in Wiktionary glosses of malin (kept, curated)
 core: "fly" not in Wiktionary glosses of voler (kept, curated)
 core: "wait" not in Wiktionary glosses of attendre (kept, curated)
+plural: bourgeois -> "bourgeoises" looks wrong, using "bourgeois"
+plural: chinois -> "chinoises" looks wrong, using "chinois"
+plural: français -> "françaises" looks wrong, using "français"
+plural: intrus -> "intruses" looks wrong, using "intrus"
+plural: irlandais -> "irlandaises" looks wrong, using "irlandais"
+plural: maximum -> "maxima" looks wrong, using "maximums"
+plural: minimum -> "minima" looks wrong, using "minimums"
+plural: polonais -> "polonaises" looks wrong, using "polonais"
+plural: portugais -> "portugaises" looks wrong, using "portugais"
+plural: roux -> "rousses" looks wrong, using "roux"
+plural: suédois -> "suédoises" looks wrong, using "suédois"
+plural: tiers -> "tierces" looks wrong, using "tiers"
+plural: turc -> "turques" looks wrong, using "turcs"
+plural: vicieux -> "vicieuses" looks wrong, using "vicieux"

@@ -56,12 +56,14 @@ src/
   data/words.json    generated word pack (CC BY-SA 4.0)
 scripts/
   build-wordlist.mjs word pack builder
-  data/              core.txt (curated beginner core), emoji.json, blocklist.json, h-aspire.json
+  data/              core.txt (curated beginner core), overrides.json (audited fixes), emoji.json, blocklist.json, h-aspire.json
 ```
 
 ## The word pack
 
 `src/data/words.json` holds **1,500 kid-safe EN→FR words**: 313 of them are hand-curated beginner words (animals, food, family, school, colours…), ranked first, and the rest come from frequency. Each word has a lemma, POS, gender, article (with elision and h aspiré), plural, IPA, frequency, level 1–4, English meaning, an optional short example and an optional emoji. Words that are often another part of speech (`play`, `watch`) and all verbs are only swapped with grammatical context ("**to** play", "**the** watch").
+
+Quality: every entry was hand-audited. Corrections live in `scripts/data/overrides.json`, which the build applies: fixed glosses and trigger words, genders, plurals, removed or vouched-for examples, and dropped entries, each with a reason. The build fails if an override points at an entry that no longer exists. It also checks that plurals follow a regular pattern (so feminine forms like *ourses* can't pass as plurals) and that an example's English line actually contains the word. `tests/glosses.test.ts` guards every known-bad case.
 
 Kid-safety: whole lemmas are dropped if any Wiktionary sense is tagged vulgar, offensive, derogatory or a slur. Senses tagged slang, archaic, regional and so on are skipped. Words, glosses and examples are checked against `scripts/data/blocklist.json`, and a test re-checks the shipped pack against the blocklist.
 
