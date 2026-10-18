@@ -1,5 +1,6 @@
 import { getSettings, saveSettings } from '@/src/store';
 import { speakWith, ttsEngine } from '@/src/speech';
+import { isSyncedKey, scheduleSync, syncNow } from '@/src/sync/engine';
 
 const AUTO_ID = 'petit-mot-auto';
 
@@ -20,6 +21,16 @@ export default defineBackground(() => {
     const tts = ttsEngine();
     return getSettings().then((s) => speakWith(tts ? [tts] : [], text, s.voiceURI));
   });
+
+  // Chrome sync: push local changes (debounced) and pull changes from the family's other computers.
+  browser.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && Object.keys(changes).some(isSyncedKey)) scheduleSync(3000);
+    else if (area === 'sync' && Object.keys(changes).some((k) => k.startsWith('pm.'))) scheduleSync(500);
+  });
+  browser.runtime.onMessage.addListener((msg: { type?: string }) => (msg?.type === 'pm:sync-now' ? syncNow() : undefined));
+  // First run after installing or upgrading: merges this computer's existing data with sync (no loss).
+  browser.runtime.onInstalled.addListener(() => scheduleSync(0));
+  browser.runtime.onStartup.addListener(() => scheduleSync(0));
 
   browser.runtime.onStartup.addListener(() => void syncAuto());
   browser.runtime.onInstalled.addListener(() => void syncAuto());

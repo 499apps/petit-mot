@@ -24,7 +24,7 @@ Petit Mot turns the pages you already read into a playful French lesson for the 
 
 **Permission justifications:**
 - activeTab, scripting: change a few English words to French on the page you clicked Petit Mot on, and run the Word Hunt game there.
-- storage: keep learners, progress and settings on this computer.
+- storage: keep learners, progress and settings in the browser. When the user leaves sync on, a compact copy goes in chrome.storage.sync so Chrome can carry it between their own computers.
 - sidePanel: show word cards, review, family leaderboard and challenges beside the page.
 - tts: say French words out loud with the voices on this computer (or an online voice, only if the user picks one).
 - Optional host permissions, requested per site only when you turn on "Always sprinkle on this site": run automatically on that site.

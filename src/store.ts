@@ -4,8 +4,10 @@ import { dayKey } from './dates';
 import { XP } from './family';
 
 /**
- * Everything lives in chrome.storage.local on this computer. No accounts, no sync, no server.
- * Keys: profiles, active, settings, xp, deck:<profileId>, challenges, hunts
+ * The app reads and writes chrome.storage.local. When "Sync progress with Chrome" is on, the
+ * background mirrors learners, decks, XP and shared settings to chrome.storage.sync
+ * (see src/sync). No accounts of ours, no server.
+ * Keys: profiles, active, settings, xp, deck:<profileId>, challenges, hunts, tombstones, syncStatus
  */
 export interface LocalChallenge {
   id: string;
@@ -30,14 +32,19 @@ export function normalizeSettings(s: Partial<Settings> | undefined): Settings {
   v.huntTimer = ([0, 60, 120] as const).includes(v.huntTimer) ? v.huntTimer : 0;
   v.graceDays = Math.min(3, Math.max(0, Math.round(Number(v.graceDays))));
   v.autoSites = Array.isArray(v.autoSites) ? v.autoSites.filter((x) => typeof x === 'string') : [];
+  v.showEmoji = v.showEmoji !== false;
+  v.syncEnabled = v.syncEnabled !== false;
   return v;
 }
 
 export async function getSettings(): Promise<Settings> {
   return normalizeSettings((await area().get('settings')).settings as Partial<Settings>);
 }
-export async function saveSettings(patch: Partial<Settings>): Promise<Settings> {
-  const s = normalizeSettings({ ...(await getSettings()), ...patch });
+const SHARED: (keyof Settings)[] = ['density', 'huntWords', 'huntTimer', 'graceDays', 'showEmoji'];
+export async function saveSettings(patch: Partial<Settings>, now = Date.now()): Promise<Settings> {
+  const before = await getSettings();
+  const s = normalizeSettings({ ...before, ...patch });
+  if (SHARED.some((k) => s[k] !== before[k])) s.updatedAt = now; // shared settings: newest edit wins across computers
   await area().set({ settings: s });
   return s;
 }
@@ -48,8 +55,11 @@ export async function getProfiles(): Promise<{ profiles: Profile[]; active: Prof
   const active = profiles.find((p) => p.id === r.active) ?? profiles[0] ?? null;
   return { profiles, active };
 }
-export async function saveProfiles(profiles: Profile[], activeId?: string | null): Promise<void> {
-  await area().set({ profiles, ...(activeId !== undefined ? { active: activeId } : {}) });
+export async function saveProfiles(profiles: Profile[], activeId?: string | null, now = Date.now()): Promise<void> {
+  const prev = new Map((((await area().get('profiles')).profiles as Profile[] | undefined) ?? []).map((p) => [p.id, p]));
+  const strip = (p: Profile) => JSON.stringify({ ...p, updatedAt: undefined });
+  const stamped = profiles.map((p) => { const old = prev.get(p.id); return !old || strip(old) !== strip(p) ? { ...p, updatedAt: now } : p; });
+  await area().set({ profiles: stamped, ...(activeId !== undefined ? { active: activeId } : {}) });
 }
 export async function setActive(id: string): Promise<void> {
   await area().set({ active: id });
@@ -62,6 +72,11 @@ export async function removeProfile(id: string): Promise<void> {
   const { profiles, active } = await getProfiles();
   const rest = profiles.filter((p) => p.id !== id);
   await area().remove(`deck:${id}`);
+  // Remember the removal so Chrome sync doesn't bring this learner back from another computer.
+  const tombstones = ((await area().get('tombstones')).tombstones as Record<string, number> | undefined) ?? {};
+  const xp = await getXp();
+  for (const row of Object.values(xp)) delete row[id];
+  await area().set({ tombstones: { ...tombstones, [id]: Date.now() }, xp });
   await saveProfiles(rest, active?.id === id ? rest[0]?.id ?? null : active?.id ?? null);
 }
 
