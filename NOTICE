@@ -1,0 +1,32 @@
+Petit Mot
+Copyright (c) 2026 499Apps
+
+The application code is licensed under the MIT License (see LICENSE).
+
+The French word pack (src/data/words.json) is a derivative work licensed under
+the Creative Commons Attribution-ShareAlike 4.0 International License
+(CC BY-SA 4.0, https://creativecommons.org/licenses/by-sa/4.0/). It was built by
+scripts/build-wordlist.mjs from:
+
+  * Lexique 3.83 - Boris New, Christophe Pallier et al. - http://www.lexique.org
+    License: CC BY-SA 4.0. Used for lemmas, grammatical gender, plurals and frequencies.
+    New, B., Pallier, C., Brysbaert, M., Ferrand, L. (2004). Lexique 2: A New French
+    Lexical Database. Behavior Research Methods, 36(3), 516-524.
+
+  * Wiktionary, the free dictionary - Wiktionary contributors - https://en.wiktionary.org
+    Extracted with Wiktextract by Tatu Ylonen, distributed by https://kaikki.org/dictionary/French/
+    License: CC BY-SA 4.0 and GNU FDL. Used for English meanings, IPA and example sentences.
+    Ylonen, T. (2022). Wiktextract: Wiktionary as Machine-Readable Structured Data. LREC 2022.
+
+  * FrequencyWords (English, 2018) - Hermit Dave - https://github.com/hermitdave/FrequencyWords
+    Content license: CC BY-SA 4.0 (derived from OpenSubtitles). Used only to drop rare
+    English meanings; no list content is shipped.
+
+  * unicode-emoji-json - Mu-An Chiou - https://github.com/muan/unicode-emoji-json
+    License: MIT. Used to match emoji names to words.
+
+Hand-curated lists in scripts/data/ (core vocabulary, emoji hints, kid-safety
+blocklist) are by 499Apps and released under CC BY-SA 4.0 alongside the pack.
+
+Third-party code bundled in the extension:
+  * ts-fsrs - open-spaced-repetition - MIT License - https://github.com/open-spaced-repetition/ts-fsrs
