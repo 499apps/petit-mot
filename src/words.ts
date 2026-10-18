@@ -39,7 +39,7 @@ export function buildIndex(words: Word[] = WORDS): Map<string, Match> {
 
 /** The French form to show for a match. */
 export function frenchForm(m: Match): string {
-  if (m.form === 'plural' && m.word.pos === 'n') return m.word.pl ?? m.word.fr + 's';
+  if (m.form === 'plural' && m.word.pos === 'n') return m.word.pl ?? (/[sxz]$/.test(m.word.fr) ? m.word.fr : m.word.fr + 's');
   return m.word.fr;
 }
 

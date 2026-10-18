@@ -9,6 +9,7 @@
 //                                 used only to drop rare English glosses
 //   scripts/data/core.txt         hand-curated beginner core (ranked first)
 //   scripts/data/emoji.json       hand-picked picture hints for the core
+//   scripts/data/overrides.json   hand-audited fixes: glosses, keys, gender, plurals, examples, drops
 // The output is a derivative of both and is licensed CC BY-SA 4.0 (see NOTICE).
 //
 // Deterministic: same inputs -> byte-identical output.
@@ -33,6 +34,12 @@ const skipTags = new Set(block.senseSkipTags);
 const topicSubs = block.topicSubstrings;
 const enExclude = new Set(block.englishExclude);
 const homographs = new Set(block.homographs);
+const over = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/data/overrides.json'), 'utf8'));
+const exampleBlock = over.exampleBlock.map((x) => x.toLowerCase());
+const dropExample = new Set(over.dropExample);
+const keepExample = new Set(over.keepExample);
+const seenOverride = new Set();
+const capitalize = new Set(over.capitalize);
 
 // English frequency rank (1 = most common)
 const enRank = new Map();
@@ -161,6 +168,29 @@ function article(fr, g) {
   if (vowel.test(fr) || (fr.startsWith('h') && !hAspire.has(fr))) return "l'";
   return g === 'f' ? 'la' : 'le'; // 'mf' nouns (enfant, élève) default to le
 }
+// A plural from the sources is trusted only if it follows a regular pattern (or is a
+// compound / known irregular); this rejects feminine forms like "ourses" for "ours".
+const IRREGULAR_PL = new Set(['yeux', 'cieux', 'mesdames', 'messieurs', 'mesdemoiselles', 'aïeux', 'bonshommes', 'gentilshommes', 'gentlemen']);
+function plural(fr, pl) {
+  const regular = fr.endsWith('s') || fr.endsWith('x') || fr.endsWith('z') ? fr
+    : /(eau|au|eu)$/.test(fr) ? fr + 'x' : fr.endsWith('al') ? fr.slice(0, -2) + 'aux' : fr + 's';
+  if (!pl || pl === fr) return null;
+  const ok = pl === fr + 's' || pl === fr + 'x' || (fr.endsWith('al') && pl === fr.slice(0, -2) + 'aux')
+    || (fr.endsWith('ail') && pl === fr.slice(0, -3) + 'aux') || IRREGULAR_PL.has(pl) || (fr.includes('-') && pl.includes('-'));
+  if (!ok) warnings.push(`plural: ${fr} -> "${pl}" looks wrong, using "${regular}"`);
+  return ok ? pl : regular === fr ? null : regular;
+}
+// Examples must actually show the word in use: the English line has to contain the gloss
+// (or a trigger key), unless an editor vouched for it in overrides.keepExample.
+function exampleOk(id, ex, en, keys) {
+  if (dropExample.has(id)) return false;
+  const both = `${ex.fr} ${ex.en}`.toLowerCase();
+  if (exampleBlock.some((b) => both.includes(b))) return false;
+  if (keepExample.has(id)) return true;
+  const t = ex.en.toLowerCase();
+  return [...keys, ...en.toLowerCase().split(/[^a-z]+/)].filter((k) => k.length >= 3)
+    .some((k) => t.includes(k.slice(0, Math.max(3, k.length - 2))));
+}
 const usableSense = (s) => !s.tags.some((t) => skipTags.has(t));
 const warnings = [];
 
@@ -180,11 +210,23 @@ function build({ L, W, pos, fr, sense, en, keys, alt, topic, curated }) {
     ex = { fr: e.text.trim(), en: tr.trim() };
     break;
   }
-  const entry = { id: `${fr}.${pos}`, fr, en, keys, alt: alt.filter((a) => !keys.includes(a) && !blockedEn(a) && (enRank.get(a) ?? Infinity) <= 6000).slice(0, 2), pos };
+  const fix = over.fix[`${fr}.${pos}`];
+  if (fix) {
+    seenOverride.add(`${fr}.${pos}`);
+    if (fix.en) en = fix.en;
+    if (fix.keys) keys = fix.keys;
+    if (fix.alt) alt = fix.alt;
+    if (fix.g) gender = fix.g;
+    if ('ex' in fix) ex = fix.ex;
+    if (blockedEn(en) || keys.some(blockedEn)) throw new Error(`overrides.json: ${fr}.${pos} uses a blocklisted English word`);
+  }
+  if (capitalize.has(en)) en = en[0].toUpperCase() + en.slice(1); // days, months, languages, nationalities
+  if (ex && !exampleOk(`${fr}.${pos}`, ex, en, keys)) ex = null;
+  const entry = { id: `${fix?.fr ?? fr}.${pos}`, fr: fix?.fr ?? fr, en, keys, alt: alt.filter((a) => !keys.includes(a) && !blockedEn(a) && (enRank.get(a) ?? Infinity) <= 6000).slice(0, 2), pos };
   if (pos === 'n') {
     entry.g = gender;
     entry.art = article(fr, gender);
-    const pl = W?.plural ?? L?.plural;
+    const pl = fix?.pl ?? plural(fr, W?.plural ?? L?.plural);
     if (pl && pl !== fr) entry.pl = pl;
   }
   if (W?.ipa) entry.ipa = W.ipa;
@@ -235,6 +277,7 @@ for (const [k, L] of lex) {
   const key = en[0];
   if (enExclude.has(key)) { stats.excluded++; continue; }
   if ((enRank.get(key) ?? Infinity) > EN_MAX_RANK) { stats.rareEnglish++; continue; }
+  if (over.drop[id]) { seenOverride.add(id); stats.curatedDrop = (stats.curatedDrop ?? 0) + 1; continue; }
   const e = build({ L, W, pos: L.pos, fr: L.lemma, sense, en: key, keys: [key], alt: en.slice(1), topic: null, curated: false });
   if (e) auto.push(e);
 }
@@ -251,13 +294,15 @@ const picked = [...coreEntries.values()].sort(byFreq);
 const usedKeys = new Set(coreKeys);
 for (const e of auto.sort(byFreq)) {
   if (picked.length >= TARGET) break;
-  if (usedKeys.has(e.en)) continue;
-  usedKeys.add(e.en);
+  if (e.keys.some((k) => usedKeys.has(k))) continue;
+  e.keys.forEach((k) => usedKeys.add(k));
   picked.push(e);
 }
 for (const e of picked) {
   if (e.pos === 'v' || e.keys.some((k) => homographs.has(k) || keyPos.get(k).size > 1)) e.ctx = true; // swap only with grammatical context
 }
+const stale = [...Object.keys(over.fix), ...Object.keys(over.drop), ...dropExample, ...keepExample].filter((id) => !seenOverride.has(id) && !picked.some((w) => w.id === id) && !auto.some((w) => w.id === id) && !coreEntries.has(id));
+if (stale.length) throw new Error(`overrides.json refers to unknown entries: ${stale.join(', ')}`);
 picked.forEach((c, i) => { c.rank = i + 1; c.level = i < 250 ? 1 : i < 600 ? 2 : i < 1000 ? 3 : 4; });
 
 const out = {

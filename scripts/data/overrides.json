@@ -1,0 +1,1067 @@
+{
+  "_comment": "Hand-curated corrections applied by scripts/build-wordlist.mjs after the automatic pass. 'fix' patches an entry (en = shown meaning, keys = English words that trigger the swap, ex: null removes the example). 'drop' removes an entry with a reason. 'dropExample' removes an example. 'keepExample' keeps an example even though its English line does not contain the gloss. 'exampleBlock' drops any example containing one of these substrings (case-insensitive). Audited 2026-10-18 for v0.1.1.",
+  "fix": {
+    "bus.n": {
+      "g": "m",
+      "note": "le bus is masculine"
+    },
+    "ours.n": {
+      "pl": "ours",
+      "note": "plural is ours, not the feminine ourses"
+    },
+    "pomme de terre.n": {
+      "pl": "pommes de terre"
+    },
+    "anglais.n": {
+      "pl": "anglais"
+    },
+    "héros.n": {
+      "pl": "héros",
+      "note": "héroïne is a different (feminine) word"
+    },
+    "match.n": {
+      "pl": "matchs"
+    },
+    "aimer.v": {
+      "ex": {
+        "fr": "Donne-moi une raison de t’aimer.",
+        "en": "Give me a reason to love you."
+      }
+    },
+    "passer.v": {
+      "en": "pass",
+      "keys": [
+        "pass"
+      ]
+    },
+    "seul.adj": {
+      "en": "alone",
+      "keys": [
+        "alone"
+      ],
+      "alt": [
+        "lonely"
+      ]
+    },
+    "sortir.v": {
+      "en": "go out",
+      "keys": [
+        "exit"
+      ]
+    },
+    "chercher.v": {
+      "en": "look for",
+      "keys": [
+        "seek"
+      ],
+      "ex": null
+    },
+    "essayer.v": {
+      "en": "try",
+      "keys": [
+        "try"
+      ]
+    },
+    "asseoir.v": {
+      "fr": "s'asseoir",
+      "en": "sit down",
+      "keys": [
+        "sit"
+      ],
+      "ex": null,
+      "note": "pronominal verb"
+    },
+    "argent.n": {
+      "en": "money",
+      "keys": [
+        "money"
+      ],
+      "alt": [
+        "silver"
+      ]
+    },
+    "changer.v": {
+      "en": "change",
+      "keys": [
+        "change"
+      ]
+    },
+    "madame.n": {
+      "en": "madam",
+      "keys": [
+        "madam"
+      ]
+    },
+    "descendre.v": {
+      "en": "go down",
+      "keys": [
+        "descend"
+      ]
+    },
+    "retourner.v": {
+      "en": "turn over",
+      "keys": [
+        "flip"
+      ]
+    },
+    "fond.n": {
+      "en": "bottom",
+      "keys": [
+        "bottom"
+      ]
+    },
+    "pièce.n": {
+      "en": "room",
+      "keys": [
+        "room"
+      ],
+      "alt": [
+        "coin",
+        "piece"
+      ]
+    },
+    "chef.n": {
+      "en": "chief",
+      "keys": [
+        "chief"
+      ],
+      "alt": [
+        "boss"
+      ],
+      "ex": null
+    },
+    "permettre.v": {
+      "en": "allow",
+      "keys": [
+        "allow",
+        "permit"
+      ],
+      "ex": null
+    },
+    "gars.n": {
+      "en": "guy",
+      "keys": [
+        "guy"
+      ]
+    },
+    "parent.n": {
+      "en": "relative",
+      "ex": null
+    },
+    "journal.n": {
+      "en": "newspaper",
+      "keys": [
+        "newspaper"
+      ],
+      "alt": [
+        "diary"
+      ]
+    },
+    "bord.n": {
+      "en": "edge",
+      "keys": [
+        "edge"
+      ]
+    },
+    "frontière.n": {
+      "en": "border",
+      "keys": [
+        "border"
+      ]
+    },
+    "hôtel.n": {
+      "en": "hotel",
+      "keys": [
+        "hotel"
+      ]
+    },
+    "faute.n": {
+      "en": "mistake",
+      "keys": [
+        "mistake"
+      ],
+      "alt": [
+        "error"
+      ]
+    },
+    "lâcher.v": {
+      "en": "let go",
+      "keys": [
+        "release"
+      ]
+    },
+    "tromper.v": {
+      "en": "trick",
+      "alt": [
+        "fool"
+      ]
+    },
+    "mariage.n": {
+      "en": "wedding",
+      "keys": [
+        "wedding",
+        "marriage"
+      ]
+    },
+    "plan.n": {
+      "en": "map (of a town)",
+      "keys": [
+        "map"
+      ]
+    },
+    "doux.adj": {
+      "en": "soft",
+      "keys": [
+        "soft",
+        "gentle"
+      ],
+      "alt": [
+        "sweet"
+      ]
+    },
+    "prix.n": {
+      "en": "price",
+      "keys": [
+        "price",
+        "prize"
+      ],
+      "ex": null
+    },
+    "sentiment.n": {
+      "en": "feeling",
+      "keys": [
+        "feeling"
+      ]
+    },
+    "remarquer.v": {
+      "en": "notice",
+      "keys": [
+        "notice"
+      ]
+    },
+    "médecin.n": {
+      "en": "doctor",
+      "keys": [
+        "physician"
+      ]
+    },
+    "réfléchir.v": {
+      "en": "think",
+      "keys": [
+        "reflect"
+      ]
+    },
+    "traîner.v": {
+      "en": "drag",
+      "keys": [
+        "drag"
+      ]
+    },
+    "bizarre.adj": {
+      "en": "weird",
+      "keys": [
+        "weird"
+      ]
+    },
+    "pardonner.v": {
+      "en": "forgive",
+      "keys": [
+        "forgive",
+        "pardon"
+      ]
+    },
+    "quartier.n": {
+      "en": "neighborhood",
+      "keys": [
+        "neighborhood",
+        "neighbourhood"
+      ]
+    },
+    "liberté.n": {
+      "en": "freedom",
+      "keys": [
+        "freedom",
+        "liberty"
+      ]
+    },
+    "poste.n": {
+      "en": "post office",
+      "keys": [
+        "mail"
+      ]
+    },
+    "preuve.n": {
+      "en": "proof",
+      "keys": [
+        "proof",
+        "evidence"
+      ]
+    },
+    "conseil.n": {
+      "en": "advice",
+      "keys": [
+        "advice"
+      ]
+    },
+    "attraper.v": {
+      "en": "catch",
+      "keys": [
+        "catch"
+      ],
+      "ex": null
+    },
+    "génial.adj": {
+      "en": "awesome",
+      "keys": [
+        "awesome",
+        "brilliant"
+      ]
+    },
+    "discuter.v": {
+      "en": "discuss",
+      "keys": [
+        "discuss"
+      ]
+    },
+    "disputer.v": {
+      "en": "argue",
+      "fr": "se disputer",
+      "keys": [
+        "argue",
+        "quarrel"
+      ],
+      "note": "pronominal verb"
+    },
+    "vérifier.v": {
+      "en": "check",
+      "keys": [
+        "check",
+        "verify"
+      ]
+    },
+    "billet.n": {
+      "en": "ticket",
+      "keys": [
+        "ticket"
+      ],
+      "ex": null
+    },
+    "salon.n": {
+      "en": "living room",
+      "keys": [
+        "lounge"
+      ]
+    },
+    "voisin.n": {
+      "en": "neighbor",
+      "keys": [
+        "neighbor",
+        "neighbour"
+      ]
+    },
+    "paquet.n": {
+      "en": "package",
+      "keys": [
+        "package",
+        "parcel",
+        "packet"
+      ]
+    },
+    "expérience.n": {
+      "en": "experience",
+      "keys": [
+        "experience",
+        "experiment"
+      ],
+      "ex": null
+    },
+    "souffle.n": {
+      "en": "breath",
+      "keys": [
+        "breath"
+      ]
+    },
+    "piquer.v": {
+      "en": "sting",
+      "keys": [
+        "sting"
+      ]
+    },
+    "titre.n": {
+      "en": "title",
+      "keys": [
+        "title"
+      ]
+    },
+    "secours.n": {
+      "en": "help, rescue",
+      "keys": [
+        "rescue"
+      ]
+    },
+    "costume.n": {
+      "en": "costume, suit",
+      "keys": [
+        "costume",
+        "suit"
+      ]
+    },
+    "résultat.n": {
+      "en": "result",
+      "keys": [
+        "result",
+        "outcome"
+      ]
+    },
+    "précis.adj": {
+      "en": "precise",
+      "keys": [
+        "precise",
+        "specific"
+      ]
+    },
+    "génie.n": {
+      "en": "genius",
+      "keys": [
+        "genius",
+        "genie"
+      ]
+    },
+    "nerveux.adj": {
+      "en": "nervous",
+      "keys": [
+        "nervous"
+      ]
+    },
+    "unité.n": {
+      "en": "unit",
+      "keys": [
+        "unit"
+      ]
+    },
+    "brillant.adj": {
+      "en": "bright",
+      "keys": [
+        "bright",
+        "shining"
+      ]
+    },
+    "angle.n": {
+      "en": "corner",
+      "keys": [
+        "corner",
+        "angle"
+      ]
+    },
+    "rejeter.v": {
+      "en": "reject",
+      "keys": [
+        "reject"
+      ]
+    },
+    "sage.adj": {
+      "en": "wise, well-behaved",
+      "keys": [
+        "wise"
+      ],
+      "note": "not 'cautious'; 'sois sage' = be good"
+    },
+    "procès.n": {
+      "en": "trial",
+      "keys": [
+        "lawsuit"
+      ]
+    },
+    "grille.n": {
+      "en": "gate",
+      "keys": [
+        "gate"
+      ],
+      "ex": null
+    },
+    "solide.adj": {
+      "en": "sturdy, solid",
+      "keys": [
+        "sturdy",
+        "solid"
+      ]
+    },
+    "ongle.n": {
+      "en": "fingernail",
+      "keys": [
+        "fingernail",
+        "fingernails"
+      ]
+    },
+    "cogner.v": {
+      "en": "knock",
+      "keys": [
+        "knock"
+      ]
+    },
+    "chiffre.n": {
+      "en": "digit",
+      "keys": [
+        "digit"
+      ]
+    },
+    "craquer.v": {
+      "en": "crack",
+      "keys": [
+        "crack"
+      ]
+    },
+    "désordre.n": {
+      "en": "mess",
+      "keys": [
+        "mess"
+      ]
+    },
+    "concours.n": {
+      "en": "contest",
+      "keys": [
+        "contest",
+        "competition"
+      ],
+      "ex": null
+    },
+    "tenue.n": {
+      "en": "outfit",
+      "keys": [
+        "outfit"
+      ]
+    },
+    "envelopper.v": {
+      "en": "wrap",
+      "keys": [
+        "wrap"
+      ]
+    },
+    "assis.adj": {
+      "en": "sitting",
+      "keys": [
+        "seated"
+      ]
+    },
+    "culture.n": {
+      "en": "farming",
+      "keys": [
+        "farming"
+      ],
+      "ex": null
+    },
+    "gratter.v": {
+      "en": "scratch",
+      "keys": [
+        "scratch"
+      ]
+    },
+    "vœu.n": {
+      "en": "wish, vow",
+      "keys": [
+        "vow"
+      ]
+    },
+    "carreau.n": {
+      "en": "tile",
+      "keys": [
+        "tile"
+      ]
+    },
+    "féminin.adj": {
+      "en": "feminine",
+      "keys": [
+        "feminine"
+      ]
+    },
+    "embêter.v": {
+      "en": "annoy",
+      "alt": [
+        "bother"
+      ]
+    },
+    "heurter.v": {
+      "en": "bump into",
+      "keys": [
+        "bump"
+      ]
+    },
+    "linge.n": {
+      "en": "laundry",
+      "keys": [
+        "laundry",
+        "linen"
+      ]
+    },
+    "ascenseur.n": {
+      "en": "elevator",
+      "keys": [
+        "elevator",
+        "lift"
+      ]
+    },
+    "meuble.n": {
+      "en": "piece of furniture",
+      "keys": [
+        "furniture"
+      ]
+    },
+    "paysage.n": {
+      "en": "landscape",
+      "keys": [
+        "landscape",
+        "scenery"
+      ]
+    },
+    "examen.n": {
+      "en": "exam",
+      "keys": [
+        "exam",
+        "examination"
+      ]
+    },
+    "lien.n": {
+      "en": "link, bond",
+      "keys": [
+        "bond"
+      ]
+    },
+    "élan.n": {
+      "en": "moose, elk",
+      "keys": [
+        "moose",
+        "elk"
+      ]
+    },
+    "toile.n": {
+      "en": "canvas, cloth",
+      "keys": [
+        "canvas",
+        "fabric"
+      ]
+    },
+    "côte.n": {
+      "en": "rib, coast",
+      "keys": [
+        "rib",
+        "coast"
+      ]
+    },
+    "salle.n": {
+      "en": "room, hall",
+      "keys": [
+        "hall"
+      ]
+    },
+    "fin.adj": {
+      "en": "thin, fine",
+      "keys": [
+        "thin"
+      ]
+    },
+    "caresser.v": {
+      "en": "stroke, pet",
+      "keys": [
+        "stroke"
+      ]
+    },
+    "gâcher.v": {
+      "en": "spoil, waste",
+      "keys": [
+        "ruin",
+        "spoil"
+      ]
+    },
+    "serrer.v": {
+      "en": "squeeze, tighten",
+      "keys": [
+        "tighten",
+        "squeeze"
+      ]
+    },
+    "ramasser.v": {
+      "en": "pick up",
+      "keys": [
+        "collect"
+      ]
+    },
+    "flot.n": {
+      "en": "flood, wave",
+      "keys": [
+        "stream"
+      ]
+    },
+    "veste.n": {
+      "ex": null
+    },
+    "glace.n": {
+      "en": "ice, ice cream",
+      "ex": null
+    },
+    "fonctionner.v": {
+      "en": "work (machine)",
+      "keys": [
+        "function"
+      ]
+    },
+    "discussion.n": {
+      "en": "discussion",
+      "keys": [
+        "debate"
+      ]
+    },
+    "poignée.n": {
+      "en": "handle, handful",
+      "keys": [
+        "handful",
+        "handle"
+      ]
+    },
+    "domaine.n": {
+      "en": "field, estate",
+      "keys": [
+        "domain"
+      ]
+    },
+    "matière.n": {
+      "en": "material, school subject",
+      "keys": [
+        "material"
+      ]
+    },
+    "noyer.v": {
+      "ex": null
+    },
+    "lutter.v": {
+      "en": "struggle, fight",
+      "keys": [
+        "struggle"
+      ]
+    },
+    "chemin.n": {
+      "en": "path, way",
+      "ex": null
+    },
+    "abri.n": {
+      "ex": null
+    },
+    "but.n": {
+      "en": "goal",
+      "keys": [
+        "goal",
+        "aim"
+      ]
+    },
+    "réveil.n": {
+      "en": "alarm clock, waking up",
+      "keys": [
+        "waking"
+      ],
+      "ex": null
+    },
+    "éclair.n": {
+      "en": "lightning",
+      "keys": [
+        "lightning",
+        "flash"
+      ]
+    },
+    "vaincre.v": {
+      "ex": null
+    },
+    "pilote.n": {
+      "ex": null
+    },
+    "gémir.v": {
+      "en": "groan, whine",
+      "keys": [
+        "moan",
+        "groan"
+      ]
+    }
+  },
+  "drop": {
+    "rentrer.v": "glossed 'score' (sports jargon); real meaning 'go home / come back'",
+    "souvenir.v": "is the noun; the verb is 'se souvenir', awkward as a swap",
+    "mal.n": "'trouble' is misleading; 'mal' is pain/harm/evil depending on context",
+    "peine.n": "glossed 'punishment'; usually 'sorrow / effort'",
+    "suite.n": "glossed 'result'; means 'continuation / sequel'",
+    "bonjour.n": "an interjection ('hello'), not a noun to swap with an article",
+    "salut.n": "glossed 'wave'; it means 'hi'",
+    "merci.n": "'la merci' (mercy) is archaic; merci means thanks",
+    "truc.n": "glossed 'procedure'; slang for 'thing'",
+    "reprendre.v": "'recover' is a rare sense",
+    "valoir.v": "glossed 'earn'; means 'be worth'",
+    "coucher.v": "'lay' is misleading; means 'put to bed / lie down'",
+    "emmener.v": "gloss parsed as 'out'",
+    "remettre.v": "'replace' is misleading; means 'put back'",
+    "travers.n": "only used in 'à travers' (across); 'outside' is wrong",
+    "simple.adj": "glossed 'single' (false friend); 'simple' is spelled the same in English so never swaps",
+    "ramener.v": "glossed 'restore'; means 'bring back'",
+    "propos.n": "glossed 'aim'; used in 'à propos'",
+    "présent.n": "glossed 'now'; confusing",
+    "marche.n": "glossed 'march'; usually 'step / walking'",
+    "prévenir.v": "glossed 'prevent' (false friend); usually 'warn' (covered by avertir)",
+    "bas.n": "glossed 'socks'; means stockings or bottom",
+    "moyen.n": "'method' is a stretch; means 'means / way'",
+    "filer.v": "glossed 'spin'; mostly slang 'run off / give'",
+    "fixer.v": "glossed 'fix' (false friend); means 'stare at / attach'",
+    "supporter.v": "glossed 'support' (false friend); means 'put up with'",
+    "engager.v": "glossed 'pledge'; rare sense",
+    "super.adj": "spelled the same in English; never swaps",
+    "entraîner.v": "glossed 'coach'; key clashes with 'train'",
+    "fou.n": "'madman' is not kind to use with kids",
+    "crever.v": "slang ('die', 'burst'); not for kids",
+    "chair.n": "'flesh'; confusing next to chaise (chair)",
+    "condition.n": "glossed 'term'",
+    "passage.n": "glossed 'event'",
+    "adresser.v": "glossed 'direct'",
+    "enfoncer.v": "glossed 'defeat'; means 'push in'",
+    "ficher.v": "slang",
+    "presser.v": "glossed 'urge'",
+    "tort.n": "only in 'avoir tort'; 'fault' is misleading",
+    "rapporter.v": "glossed 'retrieve' (hunting sense)",
+    "déposer.v": "'deposit' is a narrow sense",
+    "bonne.n": "'maid' is dated",
+    "entendu.adj": "a past participle, not a beginner adjective",
+    "convenir.v": "glossed 'admit'; means 'suit / agree'",
+    "public.adj": "gloss parsed as 'seen'",
+    "lunette.n": "glossed 'telescope'; learners need 'lunettes' (glasses)",
+    "renoncer.v": "glossed 'resign'; means 'give up'",
+    "arrêt.n": "glossed 'stopping'",
+    "disposer.v": "glossed 'organize'",
+    "masse.n": "glossed 'paste'",
+    "abattre.v": "glossed 'butcher'; violent",
+    "aise.n": "glossed 'satisfaction'; only in 'à l'aise'",
+    "dire.n": "noun sense 'saying' is rare",
+    "détacher.v": "gloss parsed as 'stains'",
+    "fait.adj": "a participle; 'done' as a swap is confusing",
+    "tombe.n": "'grave' clashes with the adjective grave (serious)",
+    "bleu.n": "'rookie' is slang",
+    "sur.adj": "'sour' is rare; looks like the preposition 'sur'",
+    "dessus.n": "glossed 'upside'",
+    "recouvrir.v": "gloss parsed as 'completely'",
+    "nul.adj": "playground insult ('rubbish')",
+    "rattraper.v": "'catch up'; 'catch' now goes to attraper",
+    "allure.n": "'appearance' is misleading",
+    "égard.n": "only in fixed phrases",
+    "démon.n": "kid-safety (scary/religious)",
+    "réserve.n": "glossed 'reservation'",
+    "fameux.adj": "duplicate of célèbre; 'famous' already taken",
+    "réclamer.v": "glossed 'protest'; means 'ask for'",
+    "voile.n": "le voile/la voile ambiguity",
+    "gros.n": "body-shaming risk; wrong plural",
+    "race.n": "false friend (not a running race) and sensitive",
+    "lutte.n": "glossed 'wrestling'",
+    "pointer.v": "glossed 'indicate'",
+    "mille.n": "a number ('thousand'), not 'mile'",
+    "millier.n": "'about a thousand'; confusing as a swap",
+    "débarquer.v": "glossed 'unload'",
+    "disposition.n": "glossed 'arrangement'",
+    "régime.n": "usually 'diet' (not for kids) or 'regime'",
+    "user.v": "'user' looks like the English noun; 'wear out'",
+    "cabinet.n": "glossed 'office'",
+    "comporter.v": "glossed 'include'",
+    "mets.n": "formal/archaic ('dish')",
+    "emparer.v": "only pronominal (s'emparer)",
+    "las.adj": "literary",
+    "fonder.v": "key 'found' is the past tense of 'find'",
+    "intime.adj": "not for kids",
+    "télégramme.n": "archaic",
+    "déshabiller.v": "not for kids",
+    "culotte.n": "underwear; not for kids",
+    "contrôler.v": "'check' goes to vérifier, 'control' to contrôle",
+    "changement.n": "'change' goes to the verb changer",
+    "mêler.v": "mostly 'se mêler de' (meddle)",
+    "éprouver.v": "glossed 'test'; means 'feel / experience'",
+    "réaliser.v": "glossed 'direct' (film); means 'achieve / make / realise'",
+    "compris.adj": "a participle ('understood')",
+    "dehors.n": "really an adverb ('outside'); 'le dehors' is odd",
+    "voiler.v": "veil; not useful",
+    "manifester.v": "'manifest' is a rare sense; usually 'demonstrate'",
+    "motif.n": "glossed 'motive'; usually 'pattern / reason'",
+    "armé.adj": "kid-safety (weapons)",
+    "enterrement.n": "'funeral' is on the kid-safety blocklist"
+  },
+  "dropExample": [
+    "noir.adj",
+    "rouge.adj",
+    "boire.v",
+    "vent.n",
+    "facile.adj",
+    "clé.n",
+    "beurre.n",
+    "girafe.n",
+    "leçon.n",
+    "nécessaire.adj",
+    "sueur.n",
+    "jurer.v",
+    "peuple.n",
+    "attaquer.v",
+    "marier.v",
+    "détruire.v",
+    "menacer.v",
+    "sacré.adj",
+    "serviette.n",
+    "magnifique.adj",
+    "envahir.v",
+    "chasseur.n",
+    "feu.n",
+    "pas.n",
+    "chance.n",
+    "révolution.n",
+    "servir.v",
+    "vrai.adj",
+    "comprendre.v",
+    "politique.n",
+    "différence.n",
+    "fréquenter.v",
+    "inspirer.v",
+    "instrument.n",
+    "commandement.n",
+    "retraite.n",
+    "réalité.n",
+    "poitrine.n",
+    "faible.adj",
+    "double.adj",
+    "cage.n",
+    "crédit.n",
+    "digne.adj",
+    "proposer.v",
+    "souvenir.n",
+    "société.n",
+    "ennui.n",
+    "secret.n",
+    "intérieur.n",
+    "déclarer.v",
+    "vol.n",
+    "personne.n",
+    "manquer.v",
+    "demander.v",
+    "chaussure.n",
+    "malin.adj",
+    "exiger.v",
+    "insister.v",
+    "solution.n",
+    "demande.n",
+    "direction.n",
+    "action.n",
+    "éternité.n",
+    "condition.n",
+    "principal.adj",
+    "céder.v",
+    "identité.n",
+    "moteur.n",
+    "système.n",
+    "intention.n",
+    "tête.n"
+  ],
+  "keepExample": [
+    "gagner.v",
+    "cuisiner.v",
+    "heure.n",
+    "sortir.v",
+    "revenir.v",
+    "essayer.v",
+    "répondre.v",
+    "paraître.v",
+    "retourner.v",
+    "madame.n",
+    "espérer.v",
+    "approcher.v",
+    "vendre.v",
+    "promettre.v",
+    "inquiéter.v",
+    "faute.n",
+    "manière.n",
+    "long.n",
+    "bizarre.adj",
+    "déranger.v",
+    "ressentir.v",
+    "régler.v",
+    "curieux.adj",
+    "peser.v",
+    "guérir.v",
+    "effrayer.v",
+    "disputer.v",
+    "liberté.n",
+    "quartier.n",
+    "aimer.v",
+    "temps.n",
+    "soleil.n",
+    "flot.n",
+    "échapper.v",
+    "traîner.v",
+    "professeur.n",
+    "chèvre.n"
+  ],
+  "exampleBlock": [
+    "make love",
+    "l'amour",
+    "faire l’amour",
+    "tumor",
+    "tumeur",
+    "diabetes",
+    "diabète",
+    "missile",
+    "invad",
+    "bars",
+    "golgotha",
+    "chosen people",
+    "religious",
+    "drown",
+    "kill",
+    "blood",
+    "beer",
+    "bière",
+    "wine",
+    "cigar",
+    "naked",
+    "gun",
+    "fusil"
+  ],
+  "capitalize": [
+    "african",
+    "american",
+    "april",
+    "arabic",
+    "august",
+    "british",
+    "canadian",
+    "chinese",
+    "december",
+    "dutch",
+    "english",
+    "european",
+    "february",
+    "french",
+    "friday",
+    "german",
+    "greek",
+    "indian",
+    "irish",
+    "italian",
+    "january",
+    "japanese",
+    "july",
+    "june",
+    "march",
+    "may",
+    "mexican",
+    "monday",
+    "november",
+    "october",
+    "polish",
+    "portuguese",
+    "russian",
+    "saturday",
+    "september",
+    "spanish",
+    "sunday",
+    "swedish",
+    "thursday",
+    "tuesday",
+    "turkish",
+    "wednesday"
+  ]
+}
