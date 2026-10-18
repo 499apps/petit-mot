@@ -56,11 +56,24 @@ describe('speakWith', () => {
     const r = await speakWith([tts], 'le chien', 'Google français');
     expect(r).toMatchObject({ ok: true, engine: 'tts', voice: { name: 'Google français' } });
   });
-  it('moves on to the next voice when one fails or times out', async () => {
+  it('a voice that times out gets one fresh retry, then the next voice', async () => {
     const tts = engine('tts', [google, paul], (x) => (x === google ? 'timeout' : 'ok'));
     const r = await speakWith([tts], 'le chien', 'Google français');
     expect(r.ok).toBe(true);
+    expect(tts.said).toEqual(['Google français', 'Google français', 'Microsoft Paul']);
+  });
+  it('a voice that errors is not retried', async () => {
+    const tts = engine('tts', [google, paul], (x) => (x === google ? 'error' : 'ok'));
+    await speakWith([tts], 'le chien', 'Google français');
     expect(tts.said).toEqual(['Google français', 'Microsoft Paul']);
+  });
+  it('superseded is not a failure: no fallback, nothing to show', async () => {
+    const tts = engine('tts', [google, paul], () => 'superseded');
+    const web = engine('web', [paul]);
+    const r = await speakWith([tts, web], 'x', 'Google français');
+    expect(r).toMatchObject({ ok: true, superseded: true });
+    expect(friendlyError(r)).toBe('');
+    expect(web.said).toEqual([]);
   });
   it('falls back to Web Speech when chrome.tts fails', async () => {
     const tts = engine('tts', [google], () => 'error');

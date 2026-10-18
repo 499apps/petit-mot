@@ -463,6 +463,7 @@ async function viewSettings(): Promise<Node[]> {
     voiceStatus.className = 'small muted';
     voiceStatus.textContent = 'Testing…';
     const r = await speak('Bonjour ! Je m’appelle Petit Mot.', settings.voiceURI);
+    if (r.superseded) return; // a newer click is reporting
     voiceStatus.className = r.ok ? 'notice ok small' : 'notice small';
     voiceStatus.textContent = r.ok ? `✓ Speaking with ${voiceLabel(r.voice!)}.` : friendlyError(r);
   };
