@@ -1,0 +1,35 @@
+{
+  "name": "petit-mot",
+  "description": "Learn French together while you browse: gentle word swaps, Word Hunt games and family streaks. 100% on your device.",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "zip": "wxt zip",
+    "postinstall": "wxt prepare",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm run lint && npm test",
+    "data": "node scripts/build-wordlist.mjs",
+    "icons": "node scripts/render-icons.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@resvg/resvg-js": "^2.6.2",
+    "@types/node": "^22.20.5",
+    "eslint": "^9.39.5",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.71.2",
+    "unicode-emoji-json": "^0.9.0",
+    "vitest": "^4.1.12",
+    "wxt": "^0.21.4"
+  },
+  "dependencies": {
+    "ts-fsrs": "^5.4.2"
+  }
+}

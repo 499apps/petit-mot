@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4c6ef5"/>
+      <stop offset="1" stop-color="#3b3fc4"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="120" height="120" rx="30" fill="url(#bg)"/>
+  <!-- speech bubble -->
+  <path d="M32 20h64a16 16 0 0 1 16 16v44a16 16 0 0 1-16 16H64l-19 15.5c-2.4 2-5.8.2-5.5-2.9l1-12.6H32a16 16 0 0 1-16-16V36a16 16 0 0 1 16-16z" fill="#fff"/>
+  <!-- é, drawn as strokes so it is crisp at every size -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M45 66H83A19 19 0 1 0 77.5 79.5" stroke="#3b4bd8" stroke-width="11"/>
+    <path d="M58 39L71 29" stroke="#ef4f5f" stroke-width="9"/>
+  </g>
+  <circle cx="104" cy="22" r="11" fill="#ffb703" stroke="#fff" stroke-width="3.5"/>
+</svg>

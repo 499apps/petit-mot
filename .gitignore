@@ -1,0 +1,6 @@
+node_modules/
+.output/
+.wxt/
+data/raw/
+*.zip
+.DS_Store
