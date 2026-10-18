@@ -33,6 +33,7 @@ export function normalizeSettings(s: Partial<Settings> | undefined): Settings {
   v.graceDays = Math.min(3, Math.max(0, Math.round(Number(v.graceDays))));
   v.autoSites = Array.isArray(v.autoSites) ? v.autoSites.filter((x) => typeof x === 'string') : [];
   v.showEmoji = v.showEmoji !== false;
+  v.voice = v.voice === 'system' ? 'system' : 'builtin'; // 0.2.0: everyone starts on the built-in voice
   v.syncEnabled = v.syncEnabled !== false;
   return v;
 }

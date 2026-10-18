@@ -1,6 +1,6 @@
 # Petit Mot privacy policy
 
-_Last updated: October 18, 2026 (v0.1.2: Chrome sync and backup files)_
+_Last updated: October 18, 2026 (v0.2.0: built-in offline voice)_
 
 Petit Mot is a free browser extension from 499Apps that helps families learn French while browsing. It was designed for use by a parent and child together, so privacy is built into how it works, not added on top.
 
@@ -41,11 +41,11 @@ Défi codes are text you copy and share yourself, for example by pasting them in
 
 ## Pronunciation
 
-By default Petit Mot speaks with a French voice installed on your computer, so nothing leaves your device.
+By default Petit Mot uses its own built-in voice: recorded audio files shipped inside the extension. Playing them needs no internet and sends nothing anywhere.
 
-In **Settings → Voice** you can choose an online voice instead. These are labelled "online voice (sent to Google)", for example *Google français*. If you do, Chrome sends the word or short phrase being spoken (never page text, names or progress) to Google to create the sound. That traffic comes from Chrome's built-in speech service, not from Petit Mot. Switch back to "Best French voice on this computer (private)" at any time.
+In **Settings → Voice** you can choose a system voice instead: one installed on your computer (private), or an online voice. These are labelled "online voice (sent to Google)", for example *Google français*. If you do, Chrome sends the word or short phrase being spoken (never page text, names or progress) to Google to create the sound. That traffic comes from Chrome's built-in speech service, not from Petit Mot. Switch back to "Petit Mot voice (built-in, offline)" at any time.
 
-Petit Mot never switches to an online voice by itself. If your computer has no French voice, it tells you how to install one: on Windows, **Settings → Time & language → Speech → Add voices → Français (France)**.
+Petit Mot never switches to an online voice by itself. If a clip can't play, it falls back to a voice on your computer, or to an online voice only if you chose one. To add a French system voice on Windows: **Settings → Time & language → Speech → Add voices → Français (France)**.
 
 ## Children
 

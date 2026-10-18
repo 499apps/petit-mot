@@ -47,7 +47,8 @@ export interface Settings {
   huntWords: number; // words to find per Word Hunt round
   huntTimer: 0 | 60 | 120; // seconds, 0 = no timer
   graceDays: number; // missed days in a row that don't break the family streak
-  voiceURI: string | null;
+  voice: 'builtin' | 'system'; // built-in clips (default) or a system voice
+  voiceURI: string | null; // the system voice, when voice is 'system'
   autoSites: string[]; // origins with opt-in auto-sprinkle
   showEmoji: boolean;
   syncEnabled: boolean; // this computer: sync progress through the user's own Chrome sync
@@ -59,6 +60,7 @@ export const DEFAULT_SETTINGS: Settings = {
   huntWords: 5,
   huntTimer: 0,
   graceDays: 2,
+  voice: 'builtin',
   voiceURI: null,
   autoSites: [],
   showEmoji: true,

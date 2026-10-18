@@ -24,7 +24,7 @@ export interface Engine {
 export interface SpeakResult {
   ok: boolean;
   voice?: Voice;
-  engine?: Engine['id'];
+  engine?: Engine['id'] | 'clip';
   reason?: 'no-french-voice' | 'failed' | 'unavailable';
   /** A newer 🔊 click replaced this one. Nothing to show the learner. */
   superseded?: boolean;
@@ -236,6 +236,12 @@ export function webEngine(): Engine | null {
       }, () => ss.cancel(), voice, current);
     },
   };
+}
+
+/** Stop any system voice in this context (before a bundled clip plays). */
+export function stopSpeech(): void {
+  try { chromeApi()?.tts?.stop(); } catch { /* not available */ }
+  try { (globalThis as { speechSynthesis?: SpeechSynthesis }).speechSynthesis?.cancel(); } catch { /* not available */ }
 }
 
 /** Engines usable in the current context, best first. */

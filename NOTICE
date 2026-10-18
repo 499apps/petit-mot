@@ -28,5 +28,20 @@ scripts/build-wordlist.mjs from:
 Hand-curated lists in scripts/data/ (core vocabulary, emoji hints, kid-safety
 blocklist) are by 499Apps and released under CC BY-SA 4.0 alongside the pack.
 
+The built-in "Petit Mot voice" (public/audio/, about 1,800 Ogg Opus clips) reads the
+word pack aloud, so the clips are an adaptation of it and are also licensed under
+CC BY-SA 4.0. They were synthesised offline by scripts/build-audio.mjs with:
+
+  * Piper text-to-speech, release 2023.11.14-2 - Michael Hansen / Rhasspy -
+    https://github.com/rhasspy/piper - MIT License. Build tool only; not shipped.
+    (Its bundled espeak-ng phonemizer is GPL-3.0; also build-time only, not shipped.)
+
+  * Piper voice fr_FR-siwis-medium - https://huggingface.co/rhasspy/piper-voices
+    (revision c10ece1a), trained on:
+    The SIWIS French Speech Synthesis Database - Junichi Yamagishi, Pierre-Edouard
+    Honnet, Philip N. Garner, Alexandros Lazaridis (2017). University of Edinburgh,
+    The Centre for Speech Technology Research. https://doi.org/10.7488/ds/1705
+    License: CC BY 4.0 ("usable for any purpose").
+
 Third-party code bundled in the extension:
   * ts-fsrs - open-spaced-repetition - MIT License - https://github.com/open-spaced-repetition/ts-fsrs
