@@ -1,4 +1,5 @@
 import { getSettings, saveSettings } from '@/src/store';
+import { speakWith, ttsEngine } from '@/src/speech';
 
 const AUTO_ID = 'petit-mot-auto';
 
@@ -10,6 +11,18 @@ export default defineBackground(() => {
     const opening = tabId !== undefined ? browser.sidePanel.open({ tabId }) : Promise.reject(new Error('no tab'));
     void browser.storage.session.set({ focus: { id: msg.id, orig: msg.orig ?? null, at: Date.now() } });
     return opening.then(() => ({ opened: true }), () => ({ opened: false }));
+  });
+
+  // Content scripts can't use chrome.tts; they ask here. Text is a word or short phrase from our pack.
+  // Answers with sendResponse (and returns true) so the reply always arrives, success or not.
+  browser.runtime.onMessage.addListener((msg: { type?: string; text?: unknown }, _sender, sendResponse) => {
+    if (msg?.type !== 'pm:speak' || typeof msg.text !== 'string') return undefined;
+    const text = msg.text.slice(0, 200);
+    const tts = ttsEngine();
+    getSettings()
+      .then((s) => speakWith(tts ? [tts] : [], text, s.voiceURI))
+      .then((r) => sendResponse(r), () => sendResponse({ ok: false, reason: 'failed', tried: [] }));
+    return true;
   });
 
   browser.runtime.onStartup.addListener(() => void syncAuto());

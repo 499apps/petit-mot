@@ -16,7 +16,7 @@ Petit Mot turns the pages you already read into a playful French lesson for the 
 🏡 Made for families: a "Who's learning?" picker, emoji avatars, a shared family streak with grace days, and a weekly leaderboard.
 ⚔️ Défi: challenge each other on the same computer, or send a code to someone on another computer.
 
-🔒 Private by design: no accounts, no ads, no tracking, and no internet connection. Everything stays on your computer. It never runs on sign-in, payment, banking or email pages.
+🔒 Private by design: no accounts, no ads, no tracking, and the extension makes no internet connections of its own (online voices are opt-in and labelled). Everything stays on your computer. It never runs on sign-in, payment, banking or email pages.
 
 1,500 carefully chosen, kid-safe words, built from Lexique 3.83 and Wiktionary (CC BY-SA 4.0).
 
@@ -26,6 +26,7 @@ Petit Mot turns the pages you already read into a playful French lesson for the 
 - activeTab, scripting: change a few English words to French on the page you clicked Petit Mot on, and run the Word Hunt game there.
 - storage: keep learners, progress and settings on this computer.
 - sidePanel: show word cards, review, family leaderboard and challenges beside the page.
+- tts: say French words out loud with the voices on this computer (or an online voice, only if the user picks one).
 - Optional host permissions, requested per site only when you turn on "Always sprinkle on this site": run automatically on that site.
 
 **Data usage:** Does not collect or use any user data.
