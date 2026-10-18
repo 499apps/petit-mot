@@ -15,7 +15,7 @@ export default defineConfig({
     },
     // activeTab + scripting: Petit Mot only touches a page when you click it.
     // sidePanel: the learning coach. storage: profiles and progress, kept on this computer.
-    permissions: ['activeTab', 'scripting', 'storage', 'sidePanel'],
+    permissions: ['activeTab', 'scripting', 'storage', 'sidePanel', 'tts'],
     // Only requested, per site, when a parent turns on "Always sprinkle on this site".
     optional_host_permissions: ['https://*/*', 'http://*/*'],
     commands: {

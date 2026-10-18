@@ -6,7 +6,7 @@ import {
 import { familyStreak, leaderboard, AVATARS, XP } from '@/src/family';
 import { dueIds, isLearned, State, type Deck } from '@/src/srs';
 import { buildQuiz, encode, decode, CodeError, newChallengeId, type Question, type Challenge } from '@/src/challenge';
-import { speak, voicesReady, rankVoices } from '@/src/speech';
+import { speak, listFrenchVoices, voiceLabel, friendlyError, matches, INSTALL_HINT } from '@/src/speech';
 import { h } from '@/src/ui/dom';
 import type { Profile, Settings, Word } from '@/src/types';
 
@@ -97,7 +97,7 @@ function wordCard(w: Word, opts: { orig?: string | null; onAnswer?: (a: 'good' |
   const cls = w.g === 'f' ? 'g-f' : w.g === 'm' ? 'g-m' : '';
   const card = deck[w.id];
   const xpmsg = h('div', { class: 'xpmsg', role: 'status', 'aria-live': 'polite' });
-  const say = (t: string) => async () => { if (!(await speak(t, settings.voiceURI))) xpmsg.textContent = 'No French voice on this computer yet. See Settings → Voice.'; };
+  const say = (t: string) => async () => { const r = await speak(t, settings.voiceURI); if (!r.ok) xpmsg.textContent = friendlyError(r, true); };
   const meaning = opts.hideMeaning
     ? h('button', { class: 'pri', onclick: () => opts.reveal?.(), text: 'Show me what it means' })
     : h('div', { class: 'stack' },
@@ -306,7 +306,7 @@ function quizView(): Node[] {
     h('section', { class: 'card q pop' },
       h('p', { class: 'muted', text: 'What does this mean?' }),
       h('div', { class: 'row' }, h('div', { class: 'wc' }, h('div', { class: 'fr', lang: 'fr', text: withArticle(w) })), h('span', { class: 'spacer' }),
-        h('button', { class: 'speak', 'aria-label': `Listen: ${withArticle(w)}`, onclick: () => void speak(withArticle(w), settings.voiceURI), text: '🔊' })),
+        h('button', { class: 'speak', 'aria-label': `Listen: ${withArticle(w)}`, onclick: async () => { const r = await speak(withArticle(w), settings.voiceURI); if (!r.ok) feedback.textContent = friendlyError(r, true); }, text: '🔊' })),
       opts, feedback,
       q.picked !== null ? h('button', { class: 'pri', onclick: () => {
         if (q.i + 1 >= q.questions.length) { const s = q.score; quiz = null; q.onDone(s); return; }
@@ -440,10 +440,22 @@ function seg<T extends string | number>(label: string, options: { v: T; t: strin
 
 async function viewSettings(): Promise<Node[]> {
   const save = async (p: Partial<Settings>) => { settings = await saveSettings(p); await refresh(); };
-  const voices = rankVoices(await voicesReady());
-  const voiceSel = h('select', { id: 'voice', onchange: (e: Event) => void save({ voiceURI: (e.target as HTMLSelectElement).value || null }) },
-    h('option', { value: '', text: 'Best French voice on this computer' }),
-    ...voices.map((v) => h('option', { value: v.voiceURI, selected: v.voiceURI === settings.voiceURI, text: `${v.name} (${v.lang})${v.localService ? '' : ' · uses the internet'}` })));
+  const voices = await listFrenchVoices();
+  const savedVoice = settings.voiceURI ? voices.find((v) => matches(v, settings.voiceURI!)) : undefined;
+  const local = voices.filter((v) => !v.online), online = voices.filter((v) => v.online);
+  const voiceSel = h('select', { id: 'voice', 'aria-describedby': 'voice-status', onchange: (e: Event) => void save({ voiceURI: (e.target as HTMLSelectElement).value || null }) },
+    h('option', { value: '', text: 'Best French voice on this computer (private)' }),
+    local.length ? h('optgroup', { label: 'On this computer' }, ...local.map((v) => h('option', { value: v.name, selected: v === savedVoice, text: voiceLabel(v) }))) : null,
+    online.length ? h('optgroup', { label: 'Online voices (the word is sent to the provider)' }, ...online.map((v) => h('option', { value: v.name, selected: v === savedVoice, text: voiceLabel(v) }))) : null,
+    settings.voiceURI && !savedVoice ? h('option', { value: settings.voiceURI, selected: true, text: `${settings.voiceURI} (not available right now)` }) : null);
+  const voiceStatus = h('p', { id: 'voice-status', class: 'small', role: 'status', 'aria-live': 'polite' });
+  const testVoice = async () => {
+    voiceStatus.className = 'small muted';
+    voiceStatus.textContent = 'Testing…';
+    const r = await speak('Bonjour ! Je m’appelle Petit Mot.', settings.voiceURI);
+    voiceStatus.className = r.ok ? 'notice ok small' : 'notice small';
+    voiceStatus.textContent = r.ok ? `✓ Speaking with ${voiceLabel(r.voice!)}.` : friendlyError(r);
+  };
   const dens = h('strong', { text: String(settings.density) });
   return [
     h('section', { class: 'card stack' }, h('h2', { text: '⚙️ Settings' }),
@@ -454,8 +466,9 @@ async function viewSettings(): Promise<Node[]> {
       seg('Streak grace days', [0, 1, 2, 3].map((v) => ({ v, t: String(v) })), settings.graceDays, (v) => void save({ graceDays: v })),
       h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: settings.showEmoji, onchange: (e: Event) => void save({ showEmoji: (e.target as HTMLInputElement).checked }) }), 'Show picture hints (emoji)'),
       h('div', { class: 'set' }, h('label', { for: 'voice' }, h('strong', { text: 'Voice' })), voiceSel,
-        voices.some((v) => v.localService) ? null : h('p', { class: 'notice small', text: 'No French voice is installed on this computer. On Windows: Settings → Time & language → Speech → Add voices → Français. On a Mac: System Settings → Accessibility → Spoken Content.' }),
-        h('button', { onclick: () => void speak('Bonjour ! Je m’appelle Petit Mot.', settings.voiceURI), text: '🔊 Test voice' }))),
+        local.length ? null : h('p', { class: 'notice small', text: `No French voice is installed on this computer, so Petit Mot can't speak privately. ${INSTALL_HINT} Then restart Chrome.` }),
+        savedVoice?.online ? h('p', { class: 'small muted', text: 'You picked an online voice: Chrome sends each word it says to Google to make the sound. Petit Mot itself still makes no network calls.' }) : null,
+        h('button', { onclick: () => void testVoice(), text: '🔊 Test voice' }), voiceStatus)),
     h('section', { class: 'card stack' }, h('h3', { text: '🌐 Always-on sites' }),
       settings.autoSites.length ? h('div', { class: 'list' }, ...settings.autoSites.map((o) => h('div', { class: 'item' }, h('span', { style: 'flex:1', text: new URL(o).host }),
         h('button', { class: 'ghost danger', 'aria-label': `Stop on ${new URL(o).host}`, onclick: async () => {
@@ -463,7 +476,7 @@ async function viewSettings(): Promise<Node[]> {
           await save({ autoSites: settings.autoSites.filter((x) => x !== o) });
         }, text: 'Remove' })))) : h('p', { class: 'muted small', text: 'None. To add one, open the Petit Mot button on a site you love and turn on “Always sprinkle”.' })),
     h('section', { class: 'card stack' }, h('h3', { text: '🔒 Privacy' }),
-      h('p', { class: 'small', text: 'Petit Mot has no accounts, no ads and no tracking, and it never connects to the internet. Learners, progress and settings stay in this browser. It only reads a page when you click the button, or on sites you turned on.' })),
+      h('p', { class: 'small', text: 'Petit Mot has no accounts, no ads and no tracking, and it never connects to the internet itself. Learners, progress and settings stay in this browser. It only reads a page when you click the button, or on sites you turned on. Voices on this computer are private; if you pick an online voice, Chrome sends the words it speaks to Google.' })),
     h('details', { class: 'card' }, h('summary', { text: 'Credits & licenses' }),
       h('ul', { class: 'credits small', style: 'padding-left:18px' },
         h('li', { text: `Word pack v${PACK.version} (${PACK.count} words) is ${PACK.license}, built from:` }),

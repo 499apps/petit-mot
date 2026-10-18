@@ -8,7 +8,7 @@ Petit Mot is a free browser extension from 499Apps that helps families learn Fre
 
 - It does **not** collect, transmit, sell or share any personal information.
 - It has **no accounts**, **no ads**, **no analytics**, **no crash reporting** and **no tracking**.
-- It **never connects to the internet**. The extension's own pages block network requests (`connect-src 'none'`), and it ships its whole French word pack inside the extension.
+- The extension itself **never connects to the internet**. Its own pages block network requests (`connect-src 'none'`), and it ships its whole French word pack inside the extension. The one exception is a choice you make: an online voice (see Pronunciation).
 
 ## What is stored, and where
 
@@ -31,7 +31,11 @@ Défi codes are text you copy and share yourself, for example by pasting them in
 
 ## Pronunciation
 
-Petit Mot uses the French voices already installed on your computer. If you pick a voice that your browser marks as an online voice, your browser, not Petit Mot, may use the internet to speak the word.
+By default Petit Mot speaks with a French voice installed on your computer, so nothing leaves your device.
+
+In **Settings → Voice** you can choose an online voice instead. These are labelled "online voice (sent to Google)", for example *Google français*. If you do, Chrome sends the word or short phrase being spoken (never page text, names or progress) to Google to create the sound. That traffic comes from Chrome's built-in speech service, not from Petit Mot. Switch back to "Best French voice on this computer (private)" at any time.
+
+Petit Mot never switches to an online voice by itself. If your computer has no French voice, it tells you how to install one: on Windows, **Settings → Time & language → Speech → Add voices → Français (France)**.
 
 ## Children
 

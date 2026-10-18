@@ -8,7 +8,7 @@
 - 🔁 **Spaced review** per learner with [FSRS](https://github.com/open-spaced-repetition/ts-fsrs).
 - 🏡 **Family**: a "Who's learning?" picker, emoji avatars, a shared family streak with grace days, team days and a weekly leaderboard.
 - ⚔️ **Défi**: challenge someone on this computer, or across computers with copy-paste codes (`PM1-…`). There is no server.
-- 🔒 **Private by design**: no accounts, no ads, no analytics and no network. Everything is stored on this computer.
+- 🔒 **Private by design**: no accounts, no ads, no analytics, and the extension makes no network calls. Everything is stored on this computer. Pronunciation uses on-device voices unless you pick an online voice, which is clearly labelled.
 
 ## Permissions & privacy
 
@@ -17,9 +17,11 @@
 | `activeTab`, `scripting` | Runs only on the page where you click Petit Mot. |
 | `storage` | Keeps learners, progress and settings locally in `chrome.storage.local`. |
 | `sidePanel` | The coach panel. |
+| `tts` | Pronunciation through Chrome's speech engine (on-device voices by default). |
 | optional host permissions | Requested **per site**, only when you turn on "Always sprinkle on this site". |
 
 - **No network.** Extension pages run with `connect-src 'none'`, ESLint bans `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource` and `sendBeacon` in `src/` and `entrypoints/`, and the Vite module-preload polyfill is disabled so the build contains no `fetch(` call at all.
+- **Voices.** On-device French voices are the default. Online voices, such as *Google français*, are labelled "online voice (sent to Google)" in Settings and are used only if you pick one. Then Chrome's own speech service, not Petit Mot, sends the spoken word to Google.
 - **Never touches** inputs, textareas, contenteditable, code/pre, links, buttons, nav/footer, forms, `translate="no"` or hidden content. See `src/engine/skip.ts`.
 - **Stays off** sign-in, checkout/cart/payment, banking, email and document pages, pages with password or card fields, and non-English pages. See `src/engine/sensitive.ts`.
 - Full policy: [docs/PRIVACY.md](docs/PRIVACY.md).
@@ -51,7 +53,7 @@ src/
   family.ts          family streak with grace days, leaderboard, XP table, avatars
   hunt.ts            Word Hunt rules (pure, tested)
   challenge.ts       PM1 challenge codes (base64url JSON + CRC32), seeded quiz
-  speech.ts          voice ranking: local fr-FR first, never a network voice unless chosen
+  speech.ts          pronunciation: chrome.tts then Web Speech, with fallbacks; local fr-FR first, online voices only if chosen
   store.ts           chrome.storage.local layer
   data/words.json    generated word pack (CC BY-SA 4.0)
 scripts/
