@@ -7,6 +7,8 @@ import { familyStreak, leaderboard, AVATARS, XP } from '@/src/family';
 import { dueIds, isLearned, State, type Deck } from '@/src/srs';
 import { buildQuiz, encode, decode, CodeError, newChallengeId, type Question, type Challenge } from '@/src/challenge';
 import { speak, listFrenchVoices, voiceLabel, friendlyError, matches, INSTALL_HINT } from '@/src/speech';
+import { getSyncStatus, describeStatus, clearSync, type SyncStatus } from '@/src/sync/engine';
+import { collectBackupData, makeBackup, parseBackup, applyBackup, type Backup, type BackupPreview } from '@/src/backup';
 import { h } from '@/src/ui/dom';
 import type { Profile, Settings, Word } from '@/src/types';
 
@@ -34,6 +36,9 @@ let deck: Deck = {};
 let focus: { id: string; orig: string | null } | null = null;
 let editing: Profile | 'new' | null = null;
 const openedXp = new Set<string>();
+let restore: { backup: Backup; preview: BackupPreview } | null = null;
+let restoreMsg: { ok: boolean; text: string } | null = null;
+let syncLine: HTMLElement | null = null;
 
 interface ReviewSession { queue: string[]; i: number; revealed: boolean; xp: number; fresh: boolean }
 let reviewS: ReviewSession | null = null;
@@ -208,6 +213,11 @@ async function viewFamily(): Promise<Node[]> {
   const top = Math.max(1, ...board.map((b) => b.weekXp));
   const medal = ['🥇', '🥈', '🥉'];
   const out: Node[] = [];
+  const sync = await getSyncStatus();
+  if (settings.syncEnabled && sync?.state === 'full') {
+    out.push(h('p', { class: 'notice small', role: 'status' }, '☁️ Chrome sync is full: new word progress stays on this computer. ',
+      h('button', { class: 'linkish', onclick: () => { tab = 'settings'; void refresh(); }, text: 'See Settings' })));
+  }
   if (profiles.length) {
     out.push(h('section', { class: 'card streak pop', 'aria-label': 'Family streak' },
       h('span', { class: 'flame', 'aria-hidden': 'true', text: streak.days ? '🔥' : '🌱' }),
@@ -470,6 +480,7 @@ async function viewSettings(): Promise<Node[]> {
         local.length ? null : h('p', { class: 'notice small', text: `No French voice is installed on this computer, so Petit Mot can't speak privately. ${INSTALL_HINT} Then restart Chrome.` }),
         savedVoice?.online ? h('p', { class: 'small muted', text: 'You picked an online voice: Chrome sends each word it says to Google to make the sound. Petit Mot itself still makes no network calls.' }) : null,
         h('button', { onclick: () => void testVoice(), text: '🔊 Test voice' }), voiceStatus)),
+    await syncSection(save),
     h('section', { class: 'card stack' }, h('h3', { text: '🌐 Always-on sites' }),
       settings.autoSites.length ? h('div', { class: 'list' }, ...settings.autoSites.map((o) => h('div', { class: 'item' }, h('span', { style: 'flex:1', text: new URL(o).host }),
         h('button', { class: 'ghost danger', 'aria-label': `Stop on ${new URL(o).host}`, onclick: async () => {
@@ -477,7 +488,7 @@ async function viewSettings(): Promise<Node[]> {
           await save({ autoSites: settings.autoSites.filter((x) => x !== o) });
         }, text: 'Remove' })))) : h('p', { class: 'muted small', text: 'None. To add one, open the Petit Mot button on a site you love and turn on “Always sprinkle”.' })),
     h('section', { class: 'card stack' }, h('h3', { text: '🔒 Privacy' }),
-      h('p', { class: 'small', text: 'Petit Mot has no accounts, no ads and no tracking, and it never connects to the internet itself. Learners, progress and settings stay in this browser. It only reads a page when you click the button, or on sites you turned on. Voices on this computer are private; if you pick an online voice, Chrome sends the words it speaks to Google.' })),
+      h('p', { class: 'small', text: 'Petit Mot has no accounts, no ads and no tracking, and it never connects to the internet itself. Learners, progress and settings are kept in this browser; with sync on, Chrome copies them to your other computers through your own Google account, like your bookmarks. It only reads a page when you click the button, or on sites you turned on. Voices on this computer are private; if you pick an online voice, Chrome sends the words it speaks to Google.' })),
     h('details', { class: 'card' }, h('summary', { text: 'Credits & licenses' }),
       h('ul', { class: 'credits small', style: 'padding-left:18px' },
         h('li', { text: `Word pack v${PACK.version} (${PACK.count} words) is ${PACK.license}, built from:` }),
@@ -485,15 +496,75 @@ async function viewSettings(): Promise<Node[]> {
         h('li', { text: 'Spaced repetition: ts-fsrs (MIT). App code: MIT. Made with ❤️ by 499Apps.' }))),
     h('section', { class: 'card stack' }, h('h3', { text: 'Start over' }),
       h('button', { class: 'danger', onclick: async () => {
-        if (!confirm('Delete all learners, progress and settings on this computer?')) return;
-        if (!confirm('Really? This cannot be undone.')) return;
-        await resetAll(); editing = 'new'; tab = 'family'; await refresh();
+        const synced = settings.syncEnabled;
+        if (!confirm(synced ? 'Delete all learners, progress and settings on this computer and in Chrome sync?' : 'Delete all learners, progress and settings on this computer?')) return;
+        if (!confirm('Really? This cannot be undone. Tip: “Back up to file” first.')) return;
+        await resetAll();
+        if (synced) await clearSync().catch(() => undefined);
+        editing = 'new'; tab = 'family'; await refresh();
       }, text: 'Delete everything' })),
   ];
 }
 
+// ---------- sync & backup ----------
+async function syncSection(save: (p: Partial<Settings>) => Promise<void>): Promise<HTMLElement> {
+  const status = await getSyncStatus();
+  syncLine = h('p', { class: lineClass(status), role: 'status', 'aria-live': 'polite', text: describeStatus(status, settings.syncEnabled) });
+  const fileInput = h('input', { type: 'file', accept: 'application/json,.json', class: 'sr-only', id: 'restore-file', tabindex: -1, 'aria-hidden': 'true', onchange: async (e: Event) => {
+    const f = (e.target as HTMLInputElement).files?.[0];
+    if (!f) return;
+    const r = await parseBackup(await f.text());
+    restore = r.ok ? { backup: r.backup, preview: r.preview } : null;
+    restoreMsg = r.ok ? null : { ok: false, text: r.error };
+    await refresh();
+  } }) as HTMLInputElement;
+  const backup = async () => {
+    const { text, filename } = await makeBackup(await collectBackupData(), browser.runtime.getManifest().version);
+    const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+    const a = h('a', { href: url, download: filename }) as HTMLAnchorElement;
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    restoreMsg = { ok: true, text: `Saved ${filename} to your Downloads. Keep it somewhere safe.` };
+    await refresh();
+  };
+  const apply = async (mode: 'merge' | 'replace') => {
+    if (!restore) return;
+    if (mode === 'replace' && !confirm('Replace this computer’s learners and progress with the backup? Learners not in the backup will be removed.')) return;
+    await applyBackup(restore.backup.data, mode);
+    restoreMsg = { ok: true, text: mode === 'merge' ? 'Backup merged ✓ Nothing was lost: for each word, the most recent practice was kept.' : 'Backup restored ✓' };
+    restore = null;
+    await refresh();
+  };
+  const preview = restore ? h('div', { class: 'notice stack', style: 'gap:8px' },
+    h('strong', { text: `Backup from ${new Date(restore.preview.createdAt).toLocaleString()}` }),
+    h('ul', { class: 'small', style: 'margin:0;padding-left:18px' }, ...restore.preview.learners.map((l) => h('li', { text: `${l.avatar} ${l.name}: ${l.cards} ${l.cards === 1 ? 'word' : 'words'}, ${l.xp} XP` }))),
+    h('div', { class: 'row', style: 'gap:8px;flex-wrap:wrap' },
+      h('button', { class: 'pri', onclick: () => void apply('merge'), text: 'Merge with this computer' }),
+      h('button', { class: 'danger', onclick: () => void apply('replace'), text: 'Replace' }),
+      h('button', { class: 'ghost', onclick: () => { restore = null; void refresh(); }, text: 'Cancel' }))) : null;
+  return h('section', { class: 'card stack' }, h('h3', { text: '☁️ Sync & backup' }),
+    h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: settings.syncEnabled, onchange: (e: Event) => void save({ syncEnabled: (e.target as HTMLInputElement).checked }) }), 'Sync progress with Chrome'),
+    syncLine,
+    h('p', { class: 'small muted', text: 'Uses your own Chrome sync (you need to be signed in to Chrome with sync on for Extensions), so learners, words, XP, streak and settings follow you to your other computers. Petit Mot never connects to the internet itself: Chrome does the syncing.' }),
+    settings.syncEnabled ? h('button', { class: 'ghost', onclick: async () => { if (syncLine) syncLine.textContent = 'Syncing…'; await browser.runtime.sendMessage({ type: 'pm:sync-now' }).catch(() => null); }, text: '🔄 Sync now' }) : null,
+    h('div', { class: 'row', style: 'gap:8px;flex-wrap:wrap' },
+      h('button', { onclick: () => void backup(), text: '⬇️ Back up to file' }),
+      h('button', { onclick: () => fileInput.click(), text: '⬆️ Restore from file' }),
+      fileInput),
+    restoreMsg ? h('p', { class: restoreMsg.ok ? 'notice ok small' : 'notice small', role: 'status', text: restoreMsg.text }) : null,
+    preview);
+}
+function lineClass(s: SyncStatus | null): string {
+  return s && (s.state === 'full' || s.state === 'error' || s.state === 'busy') ? 'notice small' : 'small';
+}
+
 // ---------- wiring ----------
 browser.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes.syncStatus && syncLine?.isConnected) {
+    const st = changes.syncStatus.newValue as SyncStatus | undefined;
+    syncLine.className = lineClass(st ?? null);
+    syncLine.textContent = describeStatus(st ?? null, settings.syncEnabled);
+  }
   if (area === 'session' && changes.focus?.newValue) {
     const f = changes.focus.newValue as { id: string; orig: string | null };
     focus = { id: f.id, orig: f.orig };
@@ -502,7 +573,7 @@ browser.storage.onChanged.addListener((changes, area) => {
   } else if (area === 'session' && changes.route?.newValue) {
     tab = (changes.route.newValue as { name: Tab }).name;
     void refresh();
-  } else if (area === 'local' && (changes.profiles || changes.active || changes.settings || changes.challenges) && !quiz && !reviewS && !editing) {
+  } else if (area === 'local' && (changes.profiles || changes.active || changes.settings || changes.challenges) && !quiz && !reviewS && !editing && !restore) {
     void refresh();
   } else if (area === 'local' && tab === 'family' && changes.xp && !editing) {
     void refresh();

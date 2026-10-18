@@ -8,14 +8,15 @@
 - 🔁 **Spaced review** per learner with [FSRS](https://github.com/open-spaced-repetition/ts-fsrs).
 - 🏡 **Family**: a "Who's learning?" picker, emoji avatars, a shared family streak with grace days, team days and a weekly leaderboard.
 - ⚔️ **Défi**: challenge someone on this computer, or across computers with copy-paste codes (`PM1-…`). There is no server.
-- 🔒 **Private by design**: no accounts, no ads, no analytics, and the extension makes no network calls. Everything is stored on this computer. Pronunciation uses on-device voices unless you pick an online voice, which is clearly labelled.
+- ☁️ **Sync & backup**: progress follows the family between computers through their own Chrome sync (on by default, can be turned off), and they can back up to or restore from a JSON file.
+- 🔒 **Private by design**: no accounts, no ads, no analytics, and the extension makes no network calls. Data lives in the browser, and Chrome sync carries it between computers if sync is on. Pronunciation uses on-device voices unless you pick an online voice, which is clearly labelled.
 
 ## Permissions & privacy
 
 | Permission | Why |
 | --- | --- |
 | `activeTab`, `scripting` | Runs only on the page where you click Petit Mot. |
-| `storage` | Keeps learners, progress and settings locally in `chrome.storage.local`. |
+| `storage` | Keeps learners, progress and settings in `chrome.storage.local`, plus a compact copy in `chrome.storage.sync` when sync is on. Chrome carries that copy through the user's own Google account. |
 | `sidePanel` | The coach panel. |
 | `tts` | Pronunciation through Chrome's speech engine (on-device voices by default). |
 | optional host permissions | Requested **per site**, only when you turn on "Always sprinkle on this site". |
@@ -55,6 +56,8 @@ src/
   challenge.ts       PM1 challenge codes (base64url JSON + CRC32), seeded quiz
   speech.ts          pronunciation: chrome.tts then Web Speech, with fallbacks; local fr-FR first, online voices only if chosen
   store.ts           chrome.storage.local layer
+  sync/              Chrome sync: compact sharded encoding within sync quotas, merge, debounced engine
+  backup.ts          backup files (version + SHA-256 checksum), validation, preview, merge or replace
   data/words.json    generated word pack (CC BY-SA 4.0)
 scripts/
   build-wordlist.mjs word pack builder

@@ -1,6 +1,6 @@
 # Petit Mot privacy policy
 
-_Last updated: October 18, 2026_
+_Last updated: October 18, 2026 (v0.1.2: Chrome sync and backup files)_
 
 Petit Mot is a free browser extension from 499Apps that helps families learn French while browsing. It was designed for use by a parent and child together, so privacy is built into how it works, not added on top.
 
@@ -12,7 +12,7 @@ Petit Mot is a free browser extension from 499Apps that helps families learn Fre
 
 ## What is stored, and where
 
-Everything stays in your browser's local extension storage (`chrome.storage.local`) on your computer:
+Everything is kept in your browser's extension storage (`chrome.storage.local`) on your computer:
 
 - learner nicknames and emoji avatars you type in,
 - each learner's word progress (spaced-repetition schedule), XP and family streak,
@@ -20,6 +20,16 @@ Everything stays in your browser's local extension storage (`chrome.storage.loca
 - your settings.
 
 You can delete it at any time: **Settings → Delete everything**, or remove the extension.
+
+### Chrome sync (on by default, you can turn it off)
+
+With **Settings → Sync progress with Chrome** on, Petit Mot also keeps a compact copy of learner nicknames and avatars, word progress, XP and streak, and shared settings in `chrome.storage.sync`. If you're signed in to Chrome with sync turned on, **Chrome** copies this to your other computers through **your own Google account**, the same way it syncs your bookmarks and extensions. This uses Chrome's own sync and its privacy controls (including a sync passphrase if you set one). Petit Mot has no server, never sees your account, and still makes no network calls itself.
+
+These stay on each computer and are not synced: the active learner, your voice choice, always-on sites, challenge history and Word Hunt history. Turn sync off at any time; data already in Chrome sync is removed by **Delete everything**.
+
+### Backup files
+
+**Back up to file** saves a JSON file to your Downloads, and you decide where it goes from there. **Restore from file** reads a file you pick, checks it, shows you what's inside, and only then merges it or replaces this computer's data. Nothing is uploaded.
 
 ## Web pages
 
