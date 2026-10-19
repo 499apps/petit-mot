@@ -3,25 +3,27 @@
 **Learn French together while you browse.** A free, open-source Chrome extension from 499Apps, made for a parent and a kid learning side by side.
 
 - ✨ **Sprinkle French**: one click turns a few English words on the page into French. Hover to peek, click for a word card.
-- 🃏 **Word cards** in the side panel: le/la with a gender colour and shape, plural, picture hint, IPA, a real example and 🔊 pronunciation with the computer's own French voice. Then "Got it" or "Again".
+- 🃏 **Word cards** in the side panel: le/la with a gender colour and shape, plural, picture hint, IPA, a real example and 🔊 pronunciation in the built-in **Petit Mot voice**: recorded clips for every word and example, offline, on any computer (no French system voice needed). Then "Got it" or "Again".
 - 🔎 **Word Hunt**: French words hide in the page, with a couple of decoys, and you find them from English clues. Play solo or pass and play with up to 4 players, with hints, an optional timer and a podium at the end.
 - 🔁 **Spaced review** per learner with [FSRS](https://github.com/open-spaced-repetition/ts-fsrs).
 - 🏡 **Family**: a "Who's learning?" picker, emoji avatars, a shared family streak with grace days, team days and a weekly leaderboard.
 - ⚔️ **Défi**: challenge someone on this computer, or across computers with copy-paste codes (`PM1-…`). There is no server.
-- 🔒 **Private by design**: no accounts, no ads, no analytics, and the extension makes no network calls. Everything is stored on this computer. Pronunciation uses on-device voices unless you pick an online voice, which is clearly labelled.
+- ☁️ **Sync & backup**: progress follows the family between computers through their own Chrome sync (on by default, can be turned off), and they can back up to or restore from a JSON file.
+- 🔒 **Private by design**: no accounts, no ads, no analytics, and the extension makes no network calls. Data lives in the browser, and Chrome sync carries it between computers if sync is on. Pronunciation uses clips shipped inside the extension; system voices are optional, and online ones are clearly labelled.
 
 ## Permissions & privacy
 
 | Permission | Why |
 | --- | --- |
 | `activeTab`, `scripting` | Runs only on the page where you click Petit Mot. |
-| `storage` | Keeps learners, progress and settings locally in `chrome.storage.local`. |
+| `storage` | Keeps learners, progress and settings in `chrome.storage.local`, plus a compact copy in `chrome.storage.sync` when sync is on. Chrome carries that copy through the user's own Google account. |
 | `sidePanel` | The coach panel. |
-| `tts` | Pronunciation through Chrome's speech engine (on-device voices by default). |
+| `offscreen` | Plays the built-in pronunciation clips for words clicked on web pages (a hidden extension page; reason `AUDIO_PLAYBACK`). |
+| `tts` | Optional system voices (Settings → Voice), and the fallback for any text without a clip. |
 | optional host permissions | Requested **per site**, only when you turn on "Always sprinkle on this site". |
 
 - **No network.** Extension pages run with `connect-src 'none'`, ESLint bans `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource` and `sendBeacon` in `src/` and `entrypoints/`, and the Vite module-preload polyfill is disabled so the build contains no `fetch(` call at all.
-- **Voices.** On-device French voices are the default. Online voices, such as *Google français*, are labelled "online voice (sent to Google)" in Settings and are used only if you pick one. Then Chrome's own speech service, not Petit Mot, sends the spoken word to Google.
+- **Voices.** The default is the built-in Petit Mot voice: audio files inside the extension, so nothing is sent anywhere. System voices are an option. Online voices, such as *Google français*, are labelled "online voice (sent to Google)" in Settings and are used only if you pick one. Then Chrome's own speech service, not Petit Mot, sends the spoken word to Google.
 - **Never touches** inputs, textareas, contenteditable, code/pre, links, buttons, nav/footer, forms, `translate="no"` or hidden content. See `src/engine/skip.ts`.
 - **Stays off** sign-in, checkout/cart/payment, banking, email and document pages, pages with password or card fields, and non-English pages. See `src/engine/sensitive.ts`.
 - Full policy: [docs/PRIVACY.md](docs/PRIVACY.md).
@@ -53,11 +55,16 @@ src/
   family.ts          family streak with grace days, leaderboard, XP table, avatars
   hunt.ts            Word Hunt rules (pure, tested)
   challenge.ts       PM1 challenge codes (base64url JSON + CRC32), seeded quiz
-  speech.ts          pronunciation: chrome.tts then Web Speech, with fallbacks; local fr-FR first, online voices only if chosen
+  audio.ts           built-in voice: clip lookup, one-at-a-time ClipPlayer, pronounce() with system-voice fallback
+  speech.ts          system voices: chrome.tts then Web Speech, with fallbacks; local fr-FR first, online voices only if chosen
   store.ts           chrome.storage.local layer
+  sync/              Chrome sync: compact sharded encoding within sync quotas, merge, debounced engine
+  backup.ts          backup files (version + SHA-256 checksum), validation, preview, merge or replace
   data/words.json    generated word pack (CC BY-SA 4.0)
+  data/audio.json    word id -> clip file (generated by npm run audio)
 scripts/
   build-wordlist.mjs word pack builder
+  build-audio.mjs    built-in voice builder (Piper + ffmpeg/Opus), incremental
   data/              core.txt (curated beginner core), overrides.json (audited fixes), emoji.json, blocklist.json, h-aspire.json
 ```
 
@@ -81,8 +88,17 @@ cd ../.. && npm run data      # writes src/data/words.json and data/build-report
 
 The build is deterministic. `data/raw/` is git-ignored.
 
+## The built-in voice
+
+`public/audio/` holds one Ogg Opus clip (24 kb/s mono) per word, said with its article for nouns (*le chien*), one per example sentence and the Settings test phrase: about 1,800 files, about 5.3 MB. They are made offline by `npm run audio` with [Piper](https://github.com/rhasspy/piper) (MIT) and the `fr_FR-siwis-medium` voice (trained on the SIWIS French Speech Synthesis Database, CC BY 4.0). The script downloads Piper and the voice once into `.cache/` at pinned versions with SHA-256 checks, needs `ffmpeg` with libopus, and only regenerates clips whose text or settings changed (`-- --all` redoes everything). Words that the voice mispronounces in isolation get a spelling hint in `scripts/data/audio-respell.json` (e.g. *dos*, *rythme*); the learner still sees the real spelling.
+
+The clips are committed (no Git LFS: they are small, and a clone or CI build then needs no TTS tools). `tests/audio.test.ts` fails if any word or example lacks a clip, if a clip is stale against its word, or if the set grows past 10 MB. Piper's synthesis is slightly random, so a full rebuild sounds the same but is not byte-identical; `scripts/data/audio-lock.json` records the text and settings behind every clip.
+
+Playback: the side panel plays clips with an `Audio` element; for the in-page card and Word Hunt the background plays them in an offscreen document, which page CSPs and autoplay rules can't block. Every click stops the previous clip and starts the new one, and if a clip can't play Petit Mot falls back to a system voice.
+
 ## Credits & licenses
 
 - Code: [MIT](LICENSE).
 - Word pack: **CC BY-SA 4.0**, derived from [Lexique 3.83](http://www.lexique.org) (CC BY-SA 4.0) and [Wiktionary](https://en.wiktionary.org) via [Wiktextract / kaikki.org](https://kaikki.org/dictionary/French/) (CC BY-SA 4.0 + GFDL). English frequency filter from [FrequencyWords](https://github.com/hermitdave/FrequencyWords) (CC BY-SA 4.0). Emoji names from [unicode-emoji-json](https://github.com/muan/unicode-emoji-json) (MIT).
+- Built-in voice: clips made with [Piper](https://github.com/rhasspy/piper) (MIT) and the *siwis* French voice, trained on the [SIWIS French Speech Synthesis Database](https://doi.org/10.7488/ds/1705) by Yamagishi, Honnet, Garner and Lazaridis (CC BY 4.0). The clips read the word pack, so they are CC BY-SA 4.0 too.
 - See [NOTICE](NOTICE) for full attribution.

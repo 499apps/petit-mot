@@ -6,9 +6,21 @@ import {
 import { familyStreak, leaderboard, AVATARS, XP } from '@/src/family';
 import { dueIds, isLearned, State, type Deck } from '@/src/srs';
 import { buildQuiz, encode, decode, CodeError, newChallengeId, type Question, type Challenge } from '@/src/challenge';
-import { speak, listFrenchVoices, voiceLabel, friendlyError, matches, INSTALL_HINT } from '@/src/speech';
+import { speak, stopSpeech, listFrenchVoices, voiceLabel, friendlyError, matches, INSTALL_HINT } from '@/src/speech';
+import { makePronouncer, pagePlayer, wordClip, exampleClip, TEST_CLIP, BUILTIN_LABEL, type Clip } from '@/src/audio';
+import { getSyncStatus, describeStatus, clearSync, type SyncStatus } from '@/src/sync/engine';
+import { collectBackupData, makeBackup, parseBackup, applyBackup, type Backup, type BackupPreview } from '@/src/backup';
 import { h } from '@/src/ui/dom';
 import type { Profile, Settings, Word } from '@/src/types';
+
+// Built-in clips play right here; a system voice is the option/fallback. Starting a clip also
+// stops one playing for a web page (offscreen), so the two never talk over each other.
+const pronounce = makePronouncer({
+  player: pagePlayer(),
+  speak: (text, voiceURI) => speak(text, voiceURI),
+  stopSpeech: () => { stopSpeech(); void browser.runtime.sendMessage({ type: 'pm:offscreen-stop' }).catch(() => undefined); },
+});
+const sayNow = (clip: Clip) => pronounce(clip, settings);
 
 type Tab = 'card' | 'review' | 'family' | 'defi' | 'settings';
 const TABS: { id: Tab; icon: string; label: string }[] = [
@@ -34,6 +46,9 @@ let deck: Deck = {};
 let focus: { id: string; orig: string | null } | null = null;
 let editing: Profile | 'new' | null = null;
 const openedXp = new Set<string>();
+let restore: { backup: Backup; preview: BackupPreview } | null = null;
+let restoreMsg: { ok: boolean; text: string } | null = null;
+let syncLine: HTMLElement | null = null;
 
 interface ReviewSession { queue: string[]; i: number; revealed: boolean; xp: number; fresh: boolean }
 let reviewS: ReviewSession | null = null;
@@ -97,7 +112,7 @@ function wordCard(w: Word, opts: { orig?: string | null; onAnswer?: (a: 'good' |
   const cls = w.g === 'f' ? 'g-f' : w.g === 'm' ? 'g-m' : '';
   const card = deck[w.id];
   const xpmsg = h('div', { class: 'xpmsg', role: 'status', 'aria-live': 'polite' });
-  const say = (t: string) => async () => { const r = await speak(t, settings.voiceURI); if (!r.ok) xpmsg.textContent = friendlyError(r, true); };
+  const say = (c: Clip) => async () => { const r = await sayNow(c); if (!r.ok) xpmsg.textContent = friendlyError(r, true); };
   const meaning = opts.hideMeaning
     ? h('button', { class: 'pri', onclick: () => opts.reveal?.(), text: 'Show me what it means' })
     : h('div', { class: 'stack' },
@@ -110,7 +125,7 @@ function wordCard(w: Word, opts: { orig?: string | null; onAnswer?: (a: 'good' |
         indefinite(w) ? h('span', { class: 'chip', lang: 'fr', text: indefinite(w)! }) : null),
       w.ex ? h('div', { class: 'example' },
         h('div', { class: 'row' }, h('span', { class: 'frx', lang: 'fr', text: w.ex.fr }), h('span', { class: 'spacer' }),
-          h('button', { class: 'ghost', 'aria-label': 'Listen to the example', onclick: say(w.ex.fr), text: '🔊' })),
+          h('button', { class: 'ghost', 'aria-label': 'Listen to the example', onclick: say(exampleClip(w)), text: '🔊' })),
         h('span', { class: 'muted small', text: w.ex.en })) : null);
   return h('section', { class: 'card wc pop', 'aria-label': `Word card for ${w.fr}` },
     h('div', { class: 'hero' },
@@ -118,7 +133,7 @@ function wordCard(w: Word, opts: { orig?: string | null; onAnswer?: (a: 'good' |
       h('div', { class: 'stack', style: 'gap:2px;flex:1' },
         h('div', { class: 'fr', lang: 'fr' }, w.art ? h('span', { class: 'art', text: w.art === "l'" ? "l'" : `${w.art} ` }) : null, h('span', { class: cls, text: w.fr })),
         w.ipa ? h('span', { class: 'ipa', text: w.ipa }) : null),
-      h('button', { class: 'speak', 'aria-label': `Listen: ${withArticle(w)}`, title: 'Listen', onclick: say(withArticle(w)), text: '🔊' })),
+      h('button', { class: 'speak', 'aria-label': `Listen: ${withArticle(w)}`, title: 'Listen', onclick: say(wordClip(w)), text: '🔊' })),
     meaning,
     opts.onAnswer && !opts.hideMeaning ? h('div', { class: 'answer' },
       h('button', { onclick: () => opts.onAnswer!('again'), text: '🔁 Again' }),
@@ -208,6 +223,11 @@ async function viewFamily(): Promise<Node[]> {
   const top = Math.max(1, ...board.map((b) => b.weekXp));
   const medal = ['🥇', '🥈', '🥉'];
   const out: Node[] = [];
+  const sync = await getSyncStatus();
+  if (settings.syncEnabled && sync?.state === 'full') {
+    out.push(h('p', { class: 'notice small', role: 'status' }, '☁️ Chrome sync is full: new word progress stays on this computer. ',
+      h('button', { class: 'linkish', onclick: () => { tab = 'settings'; void refresh(); }, text: 'See Settings' })));
+  }
   if (profiles.length) {
     out.push(h('section', { class: 'card streak pop', 'aria-label': 'Family streak' },
       h('span', { class: 'flame', 'aria-hidden': 'true', text: streak.days ? '🔥' : '🌱' }),
@@ -306,7 +326,7 @@ function quizView(): Node[] {
     h('section', { class: 'card q pop' },
       h('p', { class: 'muted', text: 'What does this mean?' }),
       h('div', { class: 'row' }, h('div', { class: 'wc' }, h('div', { class: 'fr', lang: 'fr', text: withArticle(w) })), h('span', { class: 'spacer' }),
-        h('button', { class: 'speak', 'aria-label': `Listen: ${withArticle(w)}`, onclick: async () => { const r = await speak(withArticle(w), settings.voiceURI); if (!r.ok) feedback.textContent = friendlyError(r, true); }, text: '🔊' })),
+        h('button', { class: 'speak', 'aria-label': `Listen: ${withArticle(w)}`, onclick: async () => { const r = await sayNow(wordClip(w)); if (!r.ok) feedback.textContent = friendlyError(r, true); }, text: '🔊' })),
       opts, feedback,
       q.picked !== null ? h('button', { class: 'pri', onclick: () => {
         if (q.i + 1 >= q.questions.length) { const s = q.score; quiz = null; q.onDone(s); return; }
@@ -443,19 +463,24 @@ async function viewSettings(): Promise<Node[]> {
   const voices = await listFrenchVoices();
   const savedVoice = settings.voiceURI ? voices.find((v) => matches(v, settings.voiceURI!)) : undefined;
   const local = voices.filter((v) => !v.online), online = voices.filter((v) => v.online);
-  const voiceSel = h('select', { id: 'voice', 'aria-describedby': 'voice-status', onchange: (e: Event) => void save({ voiceURI: (e.target as HTMLSelectElement).value || null }) },
-    h('option', { value: '', text: 'Best French voice on this computer (private)' }),
-    local.length ? h('optgroup', { label: 'On this computer' }, ...local.map((v) => h('option', { value: v.name, selected: v === savedVoice, text: voiceLabel(v) }))) : null,
-    online.length ? h('optgroup', { label: 'Online voices (the word is sent to the provider)' }, ...online.map((v) => h('option', { value: v.name, selected: v === savedVoice, text: voiceLabel(v) }))) : null,
-    settings.voiceURI && !savedVoice ? h('option', { value: settings.voiceURI, selected: true, text: `${settings.voiceURI} (not available right now)` }) : null);
+  const system = settings.voice === 'system';
+  const onVoice = (value: string) => void save(value === 'builtin' ? { voice: 'builtin' } : { voice: 'system', voiceURI: value || null });
+  const voiceSel = h('select', { id: 'voice', 'aria-describedby': 'voice-status', onchange: (e: Event) => onVoice((e.target as HTMLSelectElement).value) },
+    h('option', { value: 'builtin', selected: !system, text: `${BUILTIN_LABEL} · recommended` }),
+    h('option', { value: '', selected: system && !settings.voiceURI, text: 'Best French voice on this computer' }),
+    local.length ? h('optgroup', { label: 'On this computer' }, ...local.map((v) => h('option', { value: v.name, selected: system && v === savedVoice, text: voiceLabel(v) }))) : null,
+    online.length ? h('optgroup', { label: 'Online voices (the word is sent to the provider)' }, ...online.map((v) => h('option', { value: v.name, selected: system && v === savedVoice, text: voiceLabel(v) }))) : null,
+    system && settings.voiceURI && !savedVoice ? h('option', { value: settings.voiceURI, selected: true, text: `${settings.voiceURI} (not available right now)` }) : null);
   const voiceStatus = h('p', { id: 'voice-status', class: 'small', role: 'status', 'aria-live': 'polite' });
   const testVoice = async () => {
     voiceStatus.className = 'small muted';
     voiceStatus.textContent = 'Testing…';
-    const r = await speak('Bonjour ! Je m’appelle Petit Mot.', settings.voiceURI);
+    const r = await sayNow(TEST_CLIP);
     if (r.superseded) return; // a newer click is reporting
     voiceStatus.className = r.ok ? 'notice ok small' : 'notice small';
-    voiceStatus.textContent = r.ok ? `✓ Speaking with ${voiceLabel(r.voice!)}.` : friendlyError(r);
+    voiceStatus.textContent = !r.ok ? friendlyError(r)
+      : r.engine === 'clip' ? `✓ Playing the ${BUILTIN_LABEL}.${system ? ' (Your system voice didn’t start, so Petit Mot used its own.)' : ''}`
+        : `✓ Speaking with ${voiceLabel(r.voice!)}.${!system ? ' (The built-in clip didn’t play, so Petit Mot used a system voice.)' : ''}`;
   };
   const dens = h('strong', { text: String(settings.density) });
   return [
@@ -467,9 +492,11 @@ async function viewSettings(): Promise<Node[]> {
       seg('Streak grace days', [0, 1, 2, 3].map((v) => ({ v, t: String(v) })), settings.graceDays, (v) => void save({ graceDays: v })),
       h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: settings.showEmoji, onchange: (e: Event) => void save({ showEmoji: (e.target as HTMLInputElement).checked }) }), 'Show picture hints (emoji)'),
       h('div', { class: 'set' }, h('label', { for: 'voice' }, h('strong', { text: 'Voice' })), voiceSel,
-        local.length ? null : h('p', { class: 'notice small', text: `No French voice is installed on this computer, so Petit Mot can't speak privately. ${INSTALL_HINT} Then restart Chrome.` }),
-        savedVoice?.online ? h('p', { class: 'small muted', text: 'You picked an online voice: Chrome sends each word it says to Google to make the sound. Petit Mot itself still makes no network calls.' }) : null,
+        !system ? h('p', { class: 'small muted', text: 'Recorded French for every word and example, built into Petit Mot. Works offline on any computer and sends nothing anywhere.' }) : null,
+        system && !local.length ? h('p', { class: 'notice small', text: `No French voice is installed on this computer, so a system voice can't speak privately. ${INSTALL_HINT} Then restart Chrome. Until then, the ${BUILTIN_LABEL} is used when a system voice doesn’t start.` }) : null,
+        system && savedVoice?.online ? h('p', { class: 'small muted', text: 'You picked an online voice: Chrome sends each word it says to Google to make the sound. Petit Mot itself still makes no network calls.' }) : null,
         h('button', { onclick: () => void testVoice(), text: '🔊 Test voice' }), voiceStatus)),
+    await syncSection(save),
     h('section', { class: 'card stack' }, h('h3', { text: '🌐 Always-on sites' }),
       settings.autoSites.length ? h('div', { class: 'list' }, ...settings.autoSites.map((o) => h('div', { class: 'item' }, h('span', { style: 'flex:1', text: new URL(o).host }),
         h('button', { class: 'ghost danger', 'aria-label': `Stop on ${new URL(o).host}`, onclick: async () => {
@@ -477,23 +504,84 @@ async function viewSettings(): Promise<Node[]> {
           await save({ autoSites: settings.autoSites.filter((x) => x !== o) });
         }, text: 'Remove' })))) : h('p', { class: 'muted small', text: 'None. To add one, open the Petit Mot button on a site you love and turn on “Always sprinkle”.' })),
     h('section', { class: 'card stack' }, h('h3', { text: '🔒 Privacy' }),
-      h('p', { class: 'small', text: 'Petit Mot has no accounts, no ads and no tracking, and it never connects to the internet itself. Learners, progress and settings stay in this browser. It only reads a page when you click the button, or on sites you turned on. Voices on this computer are private; if you pick an online voice, Chrome sends the words it speaks to Google.' })),
+      h('p', { class: 'small', text: 'Petit Mot has no accounts, no ads and no tracking, and it never connects to the internet itself. Learners, progress and settings are kept in this browser; with sync on, Chrome copies them to your other computers through your own Google account, like your bookmarks. It only reads a page when you click the button, or on sites you turned on. The built-in voice and voices on this computer are private; if you pick an online system voice, Chrome sends the words it speaks to Google.' })),
     h('details', { class: 'card' }, h('summary', { text: 'Credits & licenses' }),
       h('ul', { class: 'credits small', style: 'padding-left:18px' },
         h('li', { text: `Word pack v${PACK.version} (${PACK.count} words) is ${PACK.license}, built from:` }),
         ...PACK.sources.map((s) => h('li', {}, h('a', { href: s.url, target: '_blank', rel: 'noreferrer', text: s.name }), ` · ${s.authors} · ${s.license}`)),
+        h('li', { text: `${BUILTIN_LABEL}: clips made with Piper (MIT) and the “siwis” French voice, trained on the SIWIS French Speech Synthesis Database (Yamagishi, Honnet, Garner, Lazaridis; CC BY 4.0). The clips read the word pack, so they are CC BY-SA 4.0 like it.` }),
         h('li', { text: 'Spaced repetition: ts-fsrs (MIT). App code: MIT. Made with ❤️ by 499Apps.' }))),
     h('section', { class: 'card stack' }, h('h3', { text: 'Start over' }),
       h('button', { class: 'danger', onclick: async () => {
-        if (!confirm('Delete all learners, progress and settings on this computer?')) return;
-        if (!confirm('Really? This cannot be undone.')) return;
-        await resetAll(); editing = 'new'; tab = 'family'; await refresh();
+        const synced = settings.syncEnabled;
+        if (!confirm(synced ? 'Delete all learners, progress and settings on this computer and in Chrome sync?' : 'Delete all learners, progress and settings on this computer?')) return;
+        if (!confirm('Really? This cannot be undone. Tip: “Back up to file” first.')) return;
+        await resetAll();
+        if (synced) await clearSync().catch(() => undefined);
+        editing = 'new'; tab = 'family'; await refresh();
       }, text: 'Delete everything' })),
   ];
 }
 
+// ---------- sync & backup ----------
+async function syncSection(save: (p: Partial<Settings>) => Promise<void>): Promise<HTMLElement> {
+  const status = await getSyncStatus();
+  syncLine = h('p', { class: lineClass(status), role: 'status', 'aria-live': 'polite', text: describeStatus(status, settings.syncEnabled) });
+  const fileInput = h('input', { type: 'file', accept: 'application/json,.json', class: 'sr-only', id: 'restore-file', tabindex: -1, 'aria-hidden': 'true', onchange: async (e: Event) => {
+    const f = (e.target as HTMLInputElement).files?.[0];
+    if (!f) return;
+    const r = await parseBackup(await f.text());
+    restore = r.ok ? { backup: r.backup, preview: r.preview } : null;
+    restoreMsg = r.ok ? null : { ok: false, text: r.error };
+    await refresh();
+  } }) as HTMLInputElement;
+  const backup = async () => {
+    const { text, filename } = await makeBackup(await collectBackupData(), browser.runtime.getManifest().version);
+    const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+    const a = h('a', { href: url, download: filename }) as HTMLAnchorElement;
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    restoreMsg = { ok: true, text: `Saved ${filename} to your Downloads. Keep it somewhere safe.` };
+    await refresh();
+  };
+  const apply = async (mode: 'merge' | 'replace') => {
+    if (!restore) return;
+    if (mode === 'replace' && !confirm('Replace this computer’s learners and progress with the backup? Learners not in the backup will be removed.')) return;
+    await applyBackup(restore.backup.data, mode);
+    restoreMsg = { ok: true, text: mode === 'merge' ? 'Backup merged ✓ Nothing was lost: for each word, the most recent practice was kept.' : 'Backup restored ✓' };
+    restore = null;
+    await refresh();
+  };
+  const preview = restore ? h('div', { class: 'notice stack', style: 'gap:8px' },
+    h('strong', { text: `Backup from ${new Date(restore.preview.createdAt).toLocaleString()}` }),
+    h('ul', { class: 'small', style: 'margin:0;padding-left:18px' }, ...restore.preview.learners.map((l) => h('li', { text: `${l.avatar} ${l.name}: ${l.cards} ${l.cards === 1 ? 'word' : 'words'}, ${l.xp} XP` }))),
+    h('div', { class: 'row', style: 'gap:8px;flex-wrap:wrap' },
+      h('button', { class: 'pri', onclick: () => void apply('merge'), text: 'Merge with this computer' }),
+      h('button', { class: 'danger', onclick: () => void apply('replace'), text: 'Replace' }),
+      h('button', { class: 'ghost', onclick: () => { restore = null; void refresh(); }, text: 'Cancel' }))) : null;
+  return h('section', { class: 'card stack' }, h('h3', { text: '☁️ Sync & backup' }),
+    h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: settings.syncEnabled, onchange: (e: Event) => void save({ syncEnabled: (e.target as HTMLInputElement).checked }) }), 'Sync progress with Chrome'),
+    syncLine,
+    h('p', { class: 'small muted', text: 'Uses your own Chrome sync (you need to be signed in to Chrome with sync on for Extensions), so learners, words, XP, streak and settings follow you to your other computers. Petit Mot never connects to the internet itself: Chrome does the syncing.' }),
+    settings.syncEnabled ? h('button', { class: 'ghost', onclick: async () => { if (syncLine) syncLine.textContent = 'Syncing…'; await browser.runtime.sendMessage({ type: 'pm:sync-now' }).catch(() => null); }, text: '🔄 Sync now' }) : null,
+    h('div', { class: 'row', style: 'gap:8px;flex-wrap:wrap' },
+      h('button', { onclick: () => void backup(), text: '⬇️ Back up to file' }),
+      h('button', { onclick: () => fileInput.click(), text: '⬆️ Restore from file' }),
+      fileInput),
+    restoreMsg ? h('p', { class: restoreMsg.ok ? 'notice ok small' : 'notice small', role: 'status', text: restoreMsg.text }) : null,
+    preview);
+}
+function lineClass(s: SyncStatus | null): string {
+  return s && (s.state === 'full' || s.state === 'error' || s.state === 'busy') ? 'notice small' : 'small';
+}
+
 // ---------- wiring ----------
 browser.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes.syncStatus && syncLine?.isConnected) {
+    const st = changes.syncStatus.newValue as SyncStatus | undefined;
+    syncLine.className = lineClass(st ?? null);
+    syncLine.textContent = describeStatus(st ?? null, settings.syncEnabled);
+  }
   if (area === 'session' && changes.focus?.newValue) {
     const f = changes.focus.newValue as { id: string; orig: string | null };
     focus = { id: f.id, orig: f.orig };
@@ -502,7 +590,7 @@ browser.storage.onChanged.addListener((changes, area) => {
   } else if (area === 'session' && changes.route?.newValue) {
     tab = (changes.route.newValue as { name: Tab }).name;
     void refresh();
-  } else if (area === 'local' && (changes.profiles || changes.active || changes.settings || changes.challenges) && !quiz && !reviewS && !editing) {
+  } else if (area === 'local' && (changes.profiles || changes.active || changes.settings || changes.challenges) && !quiz && !reviewS && !editing && !restore) {
     void refresh();
   } else if (area === 'local' && tab === 'family' && changes.xp && !editing) {
     void refresh();

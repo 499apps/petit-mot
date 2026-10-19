@@ -2,7 +2,7 @@
   "name": "petit-mot",
   "description": "Learn French together while you browse: gentle word swaps, Word Hunt games and family streaks. 100% on your device.",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "license": "MIT",
   "scripts": {
@@ -15,7 +15,8 @@
     "test": "vitest run",
     "check": "npm run typecheck && npm run lint && npm test",
     "data": "node scripts/build-wordlist.mjs",
-    "icons": "node scripts/render-icons.mjs"
+    "icons": "node scripts/render-icons.mjs",
+    "audio": "node scripts/build-audio.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

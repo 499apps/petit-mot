@@ -1,11 +1,12 @@
 import { swapPage, revert, existing, findCandidates, choose, apply } from '@/src/engine/swap';
 import { checkPage, REASON_TEXT } from '@/src/engine/sensitive';
-import { BY_ID, withArticle } from '@/src/words';
+import { BY_ID } from '@/src/words';
 import { priorityFor } from '@/src/srs';
 import { getDeck, getProfiles, getSettings, rate, addXp, addHunt } from '@/src/store';
 import { createHunt, current, endTurn, find, hint, nextPlayer, results, startTurn, timeLeft, winner, type Hunt, type HuntPlayer } from '@/src/hunt';
 import { XP } from '@/src/family';
 import { speakViaBackground, webEngine, friendlyError, type SpeakResult } from '@/src/speech';
+import { wordClip, type Clip } from '@/src/audio';
 import { PAGE_CSS } from '@/src/ui/page-style';
 import { OVERLAY_CSS } from '@/src/ui/overlay-style';
 import { h } from '@/src/ui/dom';
@@ -138,10 +139,10 @@ function overlay(): ShadowRoot {
 }
 function clearOverlay(sel: string) { shadow?.querySelectorAll(sel).forEach((n) => n.remove()); }
 
-/** Speak via the background (chrome.tts, works with every Chrome voice); fall back to the page's Web Speech. */
-function say(text: string, saved: string | null): Promise<SpeakResult> {
-  const ask = (t: string) => browser.runtime.sendMessage({ type: 'pm:speak', text: t }).then((r) => (r ?? null) as SpeakResult | null, () => null);
-  return speakViaBackground(ask, webEngine(), text, saved);
+/** Say via the background (built-in clip in the offscreen page, or chrome.tts); fall back to the page's Web Speech. */
+function say(clip: Clip, saved: string | null): Promise<SpeakResult> {
+  const ask = () => browser.runtime.sendMessage({ type: 'pm:say', clip: clip.path, text: clip.text }).then((r) => (r ?? null) as SpeakResult | null, () => null);
+  return speakViaBackground(ask, webEngine(), clip.text, saved);
 }
 
 async function fallbackCard(span: HTMLElement, id: string) {
@@ -171,7 +172,7 @@ async function fallbackCard(span: HTMLElement, id: string) {
     h('div', { class: 'mean', text: `means “${span.dataset.pmOrig ?? w.en}”` }),
     h('div', { class: 'row' },
       h('button', { class: 'speak', 'aria-label': `Say ${w.fr}`, title: 'Listen', onclick: async () => {
-        const r = await say(withArticle(w), settings.voiceURI);
+        const r = await say(wordClip(w), settings.voiceURI);
         if (!r.ok) { msg.className = 'msg oops'; msg.textContent = friendlyError(r, true); }
         else if (!r.superseded && msg.classList.contains('oops')) { msg.className = 'msg'; msg.textContent = ''; }
       }, text: '🔊' }),
@@ -239,7 +240,7 @@ function onHuntClick(span: HTMLElement) {
     span.dataset.pmFound = '1';
     span.setAttribute('aria-label', `Found: ${w.fr} means ${w.en}`);
     if (msg) { msg.className = 'msg ok'; msg.textContent = `Bravo ! ${w.fr} = ${w.en}  +${r.points}`; }
-    void getSettings().then((st) => say(w.fr, st.voiceURI));
+    void getSettings().then((st) => say(wordClip(w), st.voiceURI));
     if (r.done) finishTurn(); else renderPlaying(msg?.textContent ?? '', 'ok');
   } else if (r.kind === 'decoy') {
     span.classList.remove('pm-shake'); void span.offsetWidth; span.classList.add('pm-shake');
