@@ -101,4 +101,14 @@ Playback: the side panel plays clips with an `Audio` element; for the in-page ca
 - Code: [MIT](LICENSE).
 - Word pack: **CC BY-SA 4.0**, derived from [Lexique 3.83](http://www.lexique.org) (CC BY-SA 4.0) and [Wiktionary](https://en.wiktionary.org) via [Wiktextract / kaikki.org](https://kaikki.org/dictionary/French/) (CC BY-SA 4.0 + GFDL). English frequency filter from [FrequencyWords](https://github.com/hermitdave/FrequencyWords) (CC BY-SA 4.0). Emoji names from [unicode-emoji-json](https://github.com/muan/unicode-emoji-json) (MIT).
 - Built-in voice: clips made with [Piper](https://github.com/rhasspy/piper) (MIT) and the *siwis* French voice, trained on the [SIWIS French Speech Synthesis Database](https://doi.org/10.7488/ds/1705) by Yamagishi, Honnet, Garner and Lazaridis (CC BY 4.0). The clips read the word pack, so they are CC BY-SA 4.0 too.
-- See [NOTICE](NOTICE) for full attribution.
+- See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [NOTICE](NOTICE) for full attribution.
+
+## Contributing
+
+Issues and pull requests are welcome. Please run `npm run check` (typecheck, lint and tests) before opening a PR, and keep the extension private by design: no network requests, no tracking. To report a security or privacy problem, see [SECURITY.md](SECURITY.md).
+
+## License
+
+The code is released under the [MIT License](LICENSE), Copyright (c) 2026 499Apps.
+
+The French word pack (`src/data/words.json`), the curated lists in `scripts/data/` and the built-in voice clips (`public/audio/`) are **not** MIT. They are licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) because they derive from Lexique and Wiktionary. Reuse them with attribution and share any changes under the same license. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

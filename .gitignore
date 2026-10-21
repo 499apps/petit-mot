@@ -5,3 +5,10 @@ data/raw/
 *.zip
 .DS_Store
 .cache/
+dist/
+coverage/
+.env*
+# Extension signing keys and packed builds
+*.pem
+*.crx
+*.key
